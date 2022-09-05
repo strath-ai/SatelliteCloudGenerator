@@ -1,4 +1,4 @@
-# :cloud: satellite-cloud-simulator
+# :cloud: Satellite Cloud Generator
 A PyTorch-based tool for simulating clouds and shadows in satellite images.
 
 This tool allows for generating artificial clouds in an image, intended for applications, where pairs of clear-sky and cloudy images are required or useful.
@@ -38,6 +38,8 @@ Spatial offsets between individual cloud image channels can be achieved by setti
 Blurring of the ground image based on the cloud thickness can be achieved by adjusting the `blur_scaling` parameter (with `0.0` disabling the effect).
 
 ![Blur](imgs/back_blur.png)
+
+---
 
 The majority of features are based on the following paper:
 ```bibtex
