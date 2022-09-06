@@ -1,4 +1,6 @@
 # :cloud: Satellite Cloud Generator
+[![Open In Collab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/cidcom/SatelliteCloudGenerator/blob/main/01c_Usage_Examples_Colab.ipynb) [![DOI](https://zenodo.org/badge/532972529.svg)](https://zenodo.org/badge/latestdoi/532972529)
+
 A PyTorch-based tool for simulating clouds in satellite images.
 
 This tool allows for generating artificial clouds in an image using structural noise, such as Perlin noise; intended for applications where pairs of clear-sky and cloudy images are required or useful.
@@ -8,7 +10,15 @@ The images must be in shape `(height, width, channel)` and are also returned in 
 
 > If you found this tool useful, please cite accordingly:
 ```bibtex
-(to be updated)
+@software{7053356,
+  author       = {Mikolaj Czerkawski, Christos Tachtatzis},
+  title        = {Satellite Cloud Generator},
+  month        = sep,
+  year         = 2022,
+  publisher    = {Zenodo},
+  doi          = {10.5281/zenodo.7053356},
+  url          = {https://doi.org/10.5281/zenodo.7053356}
+}
 ```
 
 ### Requirements
