@@ -6,6 +6,14 @@ For example, it can be used to **generating training data** for tasks such as **
 
 The images must be in shape `(height, width, channel)` and are also returned in that format.
 
+### Requirements
+```bash
+torch>=1.10.0
+torchvision
+numpy
+imageio
+```
+
 ## :gear: Usage
 Basic usage:
 ```python
