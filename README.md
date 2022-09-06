@@ -6,6 +6,8 @@ For example, it can be used to **generating training data** for tasks such as **
 
 The images must be in shape `(height, width, channel)` and are also returned in that format.
 
+> :point_right: If you found this tool useful, please acknowledge it in your publications or scripts, **with a link to this GitHub repository**.
+
 ### Requirements
 ```bash
 torch>=1.10.0
@@ -14,7 +16,7 @@ kornia
 numpy
 imageio
 ```
-❗ When you clone, please use `git clone --recurse-submodules <https/ssh link of this repository>` to clone the internal submodule of [LocalGaussianBlur](https://github.com/mikonvergence/LocalGaussianBlur).
+🔗 When you clone, please use `git clone --recurse-submodules <https/ssh link of this repository>` to clone the internal submodule of [LocalGaussianBlur](https://github.com/mikonvergence/LocalGaussianBlur).
 
 ## :gear: Usage
 Basic usage:
@@ -50,7 +52,6 @@ Blurring of the ground image based on the cloud thickness can be achieved by adj
 ![Blur](imgs/back_blur.png)
 
 ---
-
 The majority of features are based on the following paper:
 ```bibtex
 @inproceedings{Lee2019,
