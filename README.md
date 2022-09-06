@@ -1,4 +1,6 @@
 # :cloud: Satellite Cloud Generator
+[![Open In Collab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/cidcom/SatelliteCloudGenerator/blob/main/01c_Usage_Examples_Colab.ipynb)
+
 A PyTorch-based tool for simulating clouds and shadows in satellite images.
 
 This tool allows for generating artificial clouds in an image, intended for applications, where pairs of clear-sky and cloudy images are required or useful.
