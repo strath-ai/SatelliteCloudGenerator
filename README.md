@@ -35,7 +35,7 @@ cloudy, mask = add_cloud(clear,
 The `min_lvl` and `max_lvl` control the range of values of the transparency `mask`.
 
 ## Features
-Apart from synthesizing a random cloud, the tool provides several additional features (switched on by default) to make the appearance of the clouds more realistic.
+Apart from synthesizing a random cloud, the tool provides several additional features (switched on by default) to make the appearance of the clouds more realistic, inspired by [(Lee2019)](https://ieeexplore.ieee.org/document/8803666).
 
 ### 1. Cloud Color
 The `cloud_color` setting adjusts the color of the base added cloud based on the mean color of the clear ground image. (Disable by passing `cloud_color=False`)
@@ -53,11 +53,7 @@ Blurring of the ground image based on the cloud thickness can be achieved by adj
 ![Blur](imgs/back_blur.png)
 
 ---
-### Selected References
-
-*Perlin for Generating Clouds*
-* (2010) [Generation of Cloud Image Based on Perlin Noise ](https://ieeexplore.ieee.org/document/5694143)
-* (2017) [Filmy Cloud Removal on Satellite Imagery with Multispectral Conditional Generative Adversarial Nets](https://arxiv.org/abs/1710.04835)
-
-*Cloud Image Synthesis Model*
-* (2019) [Cloud Removal of Satellite Images Using Convolutional Neural Network with Reliable Cloudy Image Synthesis Model](https://ieeexplore.ieee.org/document/8803666)
+### Related Work
+* (Dong2010) [Generation of Cloud Image Based on Perlin Noise ](https://ieeexplore.ieee.org/document/5694143)
+* (Enomoto2017) [Filmy Cloud Removal on Satellite Imagery with Multispectral Conditional Generative Adversarial Nets](https://arxiv.org/abs/1710.04835)
+* (Lee2019) [Cloud Removal of Satellite Images Using Convolutional Neural Network with Reliable Cloudy Image Synthesis Model](https://ieeexplore.ieee.org/document/8803666)
