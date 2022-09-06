@@ -14,6 +14,7 @@ kornia
 numpy
 imageio
 ```
+❗ When you clone, please use `git clone --recurse-submodules <https/ssh link of this repository>` to clone the internal submodule of [LocalGaussianBlur](https://github.com/mikonvergence/LocalGaussianBlur).
 
 ## :gear: Usage
 Basic usage:
