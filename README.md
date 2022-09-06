@@ -10,6 +10,7 @@ The images must be in shape `(height, width, channel)` and are also returned in 
 ```bash
 torch>=1.10.0
 torchvision
+kornia
 numpy
 imageio
 ```
