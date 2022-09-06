@@ -6,7 +6,7 @@ For example, it can be used to **generating training data** for tasks such as **
 
 The images must be in shape `(height, width, channel)` and are also returned in that format.
 
-> :point_right: If you found this tool useful, please cite accordingly:
+> If you found this tool useful, please cite accordingly:
 ```bibtex
 (to be updated)
 ```
@@ -55,9 +55,9 @@ Blurring of the ground image based on the cloud thickness can be achieved by adj
 ---
 ### Selected References
 
-*Perlin for Generating Clouds&
+*Perlin for Generating Clouds*
 * (2010) [Generation of Cloud Image Based on Perlin Noise ](https://ieeexplore.ieee.org/document/5694143)
 * (2017) [Filmy Cloud Removal on Satellite Imagery with Multispectral Conditional Generative Adversarial Nets](https://arxiv.org/abs/1710.04835)
 
-Cloud Image Synthesis Model
+*Cloud Image Synthesis Model*
 * (2019) [Cloud Removal of Satellite Images Using Convolutional Neural Network with Reliable Cloudy Image Synthesis Model](https://ieeexplore.ieee.org/document/8803666)
