@@ -1,3 +1,0 @@
-[submodule "src/LocalGaussianBlur"]
-	path = src/LocalGaussianBlur
-	url = https://github.com/mikonvergence/LocalGaussianBlur.git
