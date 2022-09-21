@@ -15,7 +15,10 @@ def cloud_hue(image, cloud):
     mean_color = image.mean((0,1))
     ambience = torch.ones_like(image)
     
-    return ambience*cloud + (mean_color/mean_color.mean())*ambience*(1-cloud)
+    if all(mean_color==0):
+        return ambience # prevent mixing with pitch black
+    else:
+        return ambience*cloud + (mean_color/mean_color.mean())*ambience*(1-cloud)
     
 
 # --- Mixing Methods
