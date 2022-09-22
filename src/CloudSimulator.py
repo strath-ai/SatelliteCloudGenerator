@@ -93,6 +93,9 @@ def add_cloud(input,
         
     # apply non-linearities
     noise_shape[noise_shape < clear_threshold] = 0.0
+    noise_shape -= clear_threshold  
+    noise_shape = noise_shape.clip(0,1)
+    noise_shape /= noise_shape.max()
 
     cloud = torch.stack(c*[1.0*noise_shape*(max_lvl-min_lvl) + min_lvl], 0)
     
@@ -172,7 +175,7 @@ def add_cloud_and_shadow(input,
     input, shadow_mask = add_cloud(input,
                                    max_lvl=0.7,
                                    min_lvl=(0.0, 0.05),
-                                   clear_threshold=0.3,
+                                   clear_threshold=0.5,
                                    noise_type = 'perlin',
                                    decay_factor=1.5, # Suppress HF detail
                                    invert=True, # Invert Color for shadow
