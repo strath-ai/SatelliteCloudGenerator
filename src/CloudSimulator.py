@@ -129,3 +129,74 @@ def add_cloud(input,
         return output
     else:
         return output, 1.0-cloud if not invert else cloud
+
+def add_cloud_and_shadow(input,
+                         max_lvl=(0.95,1.0),
+                         min_lvl=(0.0, 0.05),
+                         clear_threshold=0.0,
+                         noise_type = 'perlin',
+                         decay_factor=1,
+                         channel_offset=2,
+                         blur_scaling=2.0,
+                         cloud_color=True,
+                         return_cloud=False
+                        ):
+    """ Takes an input image of shape [height, width, channels]        
+        and returns a generated cloudy version of the input image, with additional shadows added to the ground image
+    
+    Args:
+        max_lvl (float or tuple of floats): Indicates the maximum strength of the clear image (1.0 means that some pixels will be clear)
+        
+        min_lvl (float or tuple of floats): Indicates the minimum strength of the clear image (0.0 means that some pixels will have full cloud)
+        clear_threshold (float): An optional threshold for cutting off some part of the initial generated cloud mask
+        
+        noise_type (string: 'perlin', 'flex'): Method of noise generation (currently supported: 'perlin', 'flex')
+        
+        decay_factor (float): decay factor that narrows the spectrum of the generated noise (higher values, such as 2.0 will reduce the amplitude of high spatial frequencies, yielding a 'blurry' cloud)
+        
+        channel_offset (int): optional offset that can randomly misalign spatially the individual cloud mask channels (by a value in range -channel_offset and +channel_offset)
+        
+        blur_scaling (float): Scaling factor for the variance of locally varying Gaussian blur (dependent on cloud thickness). Value of 0 will disable this feature.
+        
+        cloud_color (bool): If True, it will adjust the color of the cloud based on the mean color of the clear sky image
+        
+        return_cloud (bool): If True, it will return a channel-wise cloud mask of shape [height, width, channels] along with the cloudy image
+        
+    Returns:
+    
+        Tensor: Tensor containing a generated cloudy image (and a cloud mask if return_cloud == True)
+  
+    """  
+    
+    # 1. Add Shadows
+    input, shadow_mask = add_cloud(input,
+                                   max_lvl=0.7,
+                                   min_lvl=(0.0, 0.05),
+                                   clear_threshold=0.3,
+                                   noise_type = 'perlin',
+                                   decay_factor=1.5, # Suppress HF detail
+                                   invert=True, # Invert Color for shadow
+                                   channel_offset=0, # Cloud SFX disabled
+                                   blur_scaling=0.0, # Cloud SFX disabled
+                                   cloud_color=False, # Cloud SFX disabled
+                                   return_cloud=True
+             )
+    
+    # 2. Add Cloud
+    input, cloud_mask = add_cloud(input,
+                                  max_lvl=max_lvl,
+                                  min_lvl=min_lvl,
+                                  clear_threshold=clear_threshold,
+                                  noise_type=noise_type,
+                                  decay_factor=decay_factor,
+                                  invert=False,
+                                  channel_offset=channel_offset,
+                                  blur_scaling=blur_scaling,
+                                  cloud_color=cloud_color,
+                                  return_cloud=True
+                                 )
+    
+    if not return_cloud:
+        return input
+    else:
+        return input, cloud_mask, shadow_mask
