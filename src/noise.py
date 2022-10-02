@@ -45,7 +45,9 @@ def perlin_ms(octaves=[1, 1, 1, 1], width=2, height=2, device=None):
 def generate_perlin(scales=None, shape=(256,256), weights=None, decay_factor=1):
     # Set Up Scales
     if scales is None:
-        scales = [2**i for i in range(2,7)]
+        up_lim = max([2, int(np.log2(min(shape)))-1])
+        
+        scales = [2**i for i in range(2,up_lim)]
         # proportional to image size
         f = int(0.25*max(shape)/max(scales))
         scales = [el*f for el in scales]
