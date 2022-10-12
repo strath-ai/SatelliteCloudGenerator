@@ -141,6 +141,7 @@ def add_cloud_and_shadow(input,
                          min_lvl=(0.0, 0.05),
                          clear_threshold=0.0,
                          noise_type = 'perlin',
+                         const_scale=True,
                          decay_factor=1,
                          channel_offset=2,
                          blur_scaling=2.0,
@@ -157,6 +158,8 @@ def add_cloud_and_shadow(input,
         clear_threshold (float): An optional threshold for cutting off some part of the initial generated cloud mask
         
         noise_type (string: 'perlin', 'flex'): Method of noise generation (currently supported: 'perlin', 'flex')
+        
+        const_scale (bool): If True, the spatial frequencies of the cloud/shadow shape are scaled based on the image size (this makes the cloud preserve its appearance regardless of image resolution)
         
         decay_factor (float): decay factor that narrows the spectrum of the generated noise (higher values, such as 2.0 will reduce the amplitude of high spatial frequencies, yielding a 'blurry' cloud)
         
@@ -180,6 +183,7 @@ def add_cloud_and_shadow(input,
                                    min_lvl=(0.0, 0.05),
                                    clear_threshold=0.5,
                                    noise_type = 'perlin',
+                                   const_scale=const_scale,
                                    decay_factor=1.5, # Suppress HF detail
                                    invert=True, # Invert Color for shadow
                                    channel_offset=0, # Cloud SFX disabled
@@ -194,6 +198,7 @@ def add_cloud_and_shadow(input,
                                   min_lvl=min_lvl,
                                   clear_threshold=clear_threshold,
                                   noise_type=noise_type,
+                                  const_scale=const_scale,
                                   decay_factor=decay_factor,
                                   invert=False,
                                   channel_offset=channel_offset,
