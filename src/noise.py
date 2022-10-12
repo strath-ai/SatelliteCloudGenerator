@@ -42,15 +42,16 @@ def perlin_ms(octaves=[1, 1, 1, 1], width=2, height=2, device=None):
         height *= 2
     return out
 
-def generate_perlin(scales=None, shape=(256,256), weights=None, decay_factor=1):
+def generate_perlin(scales=None, shape=(256,256), weights=None, const_scale=True, decay_factor=1):
     # Set Up Scales
     if scales is None:
         up_lim = max([2, int(np.log2(min(shape)))-1])
         
         scales = [2**i for i in range(2,up_lim)]
-        # proportional to image size
-        f = int(0.25*max(shape)/max(scales))
-        scales = [el*f for el in scales]
+        # proportional to image size, if const_scale is preserved
+        if const_scale:
+            f = int(2**np.floor(np.log2(0.25*max(shape)/max(scales))))
+            scales = [el*f for el in scales]
     
     if weights is None:
         weights = [el**decay_factor for el in scales]
@@ -65,17 +66,24 @@ def generate_perlin(scales=None, shape=(256,256), weights=None, decay_factor=1):
     return output_transform(out)
 
 # --- Flexible Noise Filtering Methods
-def default_weight(input, decay_factor=32):
+def default_weight(input, const_scale=True, decay_factor=1):
+    
+    # scaling factor        
+    if const_scale:
+        factor_multiplier=0.32*max(input.shape)
+    else:
+        factor_multiplier=64
+    
     if isinstance(decay_factor, list) or isinstance(decay_factor, tuple):
         ret=0
         decay_factor=sorted(decay_factor)[::-1]
         for f in decay_factor:
-            ret+=torch.exp(-32*f*input)/(decay_factor[0]/f)
+            ret+=torch.exp(-factor_multiplier*f*input)/(decay_factor[0]/f)
     else:
-        ret = torch.exp(-32*decay_factor*input)
+        ret = torch.exp(-factor_multiplier*decay_factor*input)
     return ret
 
-def flex_noise(width, height, spectral_weight=default_weight, decay_factor=1):
+def flex_noise(width, height, spectral_weight=default_weight, const_scale=False, decay_factor=1):
     
     # Source Noise
     x = torch.rand(width,height) - 0.5    
@@ -91,10 +99,10 @@ def flex_noise(width, height, spectral_weight=default_weight, decay_factor=1):
     X_grid,Y_grid = torch.meshgrid(x_space,y_space)
 
     W_space = (X_grid**2+Y_grid**2)**0.5
-    W_space /= W_space.max()
+    W_space /= W_space.max()    
 
     # Modulation of Weight
-    M = spectral_weight(W_space, decay_factor=decay_factor)
+    M = spectral_weight(W_space, const_scale=const_scale, decay_factor=decay_factor)
     
     # Application to Noise Spectrum
     return output_transform(torch.fft.irfft2(torch.fft.fftshift(M,0)*x_f))

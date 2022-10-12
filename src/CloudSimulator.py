@@ -28,6 +28,7 @@ def add_cloud(input,
               min_lvl=(0.0, 0.05),
               clear_threshold=0.0,
               noise_type = 'perlin',
+              const_scale=True,
               decay_factor=1,
               invert=False,
               channel_offset=2,
@@ -45,6 +46,8 @@ def add_cloud(input,
         clear_threshold (float): An optional threshold for cutting off some part of the initial generated cloud mask
         
         noise_type (string: 'perlin', 'flex'): Method of noise generation (currently supported: 'perlin', 'flex')
+        
+        const_scale (bool): If True, the spatial frequencies of the cloud shape are scaled based on the image size (this makes the cloud preserve its appearance regardless of image resolution)
         
         decay_factor (float): decay factor that narrows the spectrum of the generated noise (higher values, such as 2.0 will reduce the amplitude of high spatial frequencies, yielding a 'blurry' cloud)
         
@@ -80,9 +83,9 @@ def add_cloud(input,
       
     # generate noise shape
     if noise_type == 'perlin':
-        noise_shape = generate_perlin(shape=(h,w),decay_factor=decay_factor).numpy()              
+        noise_shape = generate_perlin(shape=(h,w), const_scale=const_scale, decay_factor=decay_factor).numpy()              
     elif noise_type == 'flex':
-        noise_shape = flex_noise(h,w, decay_factor=decay_factor).numpy()
+        noise_shape = flex_noise(h,w, const_scale=const_scale, decay_factor=decay_factor).numpy()
     else:
         raise NotImplementedError
         
