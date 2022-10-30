@@ -30,6 +30,7 @@ def add_cloud(input,
               noise_type = 'perlin',
               const_scale=True,
               decay_factor=1,
+              locality_degree=1,
               invert=False,
               channel_offset=2,
               blur_scaling=2.0,
@@ -50,6 +51,8 @@ def add_cloud(input,
         const_scale (bool): If True, the spatial frequencies of the cloud shape are scaled based on the image size (this makes the cloud preserve its appearance regardless of image resolution)
         
         decay_factor (float): decay factor that narrows the spectrum of the generated noise (higher values, such as 2.0 will reduce the amplitude of high spatial frequencies, yielding a 'blurry' cloud)
+        
+        locality degree (int): more local clouds shapes can be achieved by multiplying several random cloud shapes with each other (value of 1 disables this effect, and higher integers correspond to the number of multiplied masks)
         
         invert (bool) : for some applications, the cloud can be inverted to effectively decrease the level of reflected power (see thermal example in the notebook)
         
@@ -81,18 +84,24 @@ def add_cloud(input,
     if isinstance(max_lvl, tuple) or isinstance(max_lvl, list):
         max_lvl = max_lvl[0] + (max_lvl[1]-max_lvl[0])*torch.rand(1).item()
       
-    # generate noise shape
-    if noise_type == 'perlin':
-        noise_shape = generate_perlin(shape=(h,w), const_scale=const_scale, decay_factor=decay_factor).numpy()              
-    elif noise_type == 'flex':
-        noise_shape = flex_noise(h,w, const_scale=const_scale, decay_factor=decay_factor).numpy()
-    else:
-        raise NotImplementedError
-        
-    noise_shape -= noise_shape.min()
-    noise_shape /= noise_shape.max()
+    locality_degree=max([1, int(locality_degree)])
+    
+    net_noise_shape=torch.ones((h,w))
+    for idx in range(locality_degree):
+        # generate noise shape
+        if noise_type == 'perlin':
+            noise_shape = generate_perlin(shape=(h,w), const_scale=const_scale, decay_factor=decay_factor).numpy()              
+        elif noise_type == 'flex':
+            noise_shape = flex_noise(h,w, const_scale=const_scale, decay_factor=decay_factor).numpy()
+        else:
+            raise NotImplementedError
 
-    noise_shape = torch.FloatTensor(noise_shape)
+        noise_shape -= noise_shape.min()
+        noise_shape /= noise_shape.max()
+        
+        net_noise_shape*=noise_shape
+
+    noise_shape = torch.FloatTensor((1-net_noise_shape))
         
     # apply non-linearities
     noise_shape[noise_shape < clear_threshold] = 0.0
@@ -143,6 +152,7 @@ def add_cloud_and_shadow(input,
                          noise_type = 'perlin',
                          const_scale=True,
                          decay_factor=1,
+                         locality_degree=1,
                          channel_offset=2,
                          blur_scaling=2.0,
                          cloud_color=True,
@@ -162,6 +172,8 @@ def add_cloud_and_shadow(input,
         const_scale (bool): If True, the spatial frequencies of the cloud/shadow shape are scaled based on the image size (this makes the cloud preserve its appearance regardless of image resolution)
         
         decay_factor (float): decay factor that narrows the spectrum of the generated noise (higher values, such as 2.0 will reduce the amplitude of high spatial frequencies, yielding a 'blurry' cloud)
+        
+        locality degree (int): more local clouds shapes can be achieved by multiplying several random cloud shapes with each other (value of 1 disables this effect, and higher integers correspond to the number of multiplied masks)
         
         channel_offset (int): optional offset that can randomly misalign spatially the individual cloud mask channels (by a value in range -channel_offset and +channel_offset)
         
@@ -200,6 +212,7 @@ def add_cloud_and_shadow(input,
                                   noise_type=noise_type,
                                   const_scale=const_scale,
                                   decay_factor=decay_factor,
+                                  locality_degree=locality_degree,
                                   invert=False,
                                   channel_offset=channel_offset,
                                   blur_scaling=blur_scaling,
