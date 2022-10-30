@@ -235,6 +235,7 @@ def add_cloud_and_shadow(input,
                                    noise_type = 'perlin',
                                    const_scale=const_scale,
                                    decay_factor=1.5, # Suppress HF detail
+                                   locality_degree=locality_degree-1, # make similar locality as cloud (-1 works well because it's lower frequency)
                                    invert=True, # Invert Color for shadow
                                    channel_offset=0, # Cloud SFX disabled
                                    blur_scaling=0.0, # Cloud SFX disabled
