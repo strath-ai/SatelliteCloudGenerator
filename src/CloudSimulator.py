@@ -23,6 +23,42 @@ def cloud_hue(image, cloud):
 
 # --- Mixing Methods
 
+def mix(input, cloud, blur_scaling=2.0, cloud_color=True, invert=False):
+    """ Mixing Operation for an input image and a cloud
+    
+        Args:
+            input (Tensor) : input image [height, width, channels]  
+
+            cloud (Tensor) : cloud of the same shape [height, width, channels] 
+
+            blur_scaling (float): Scaling factor for the variance of locally varying Gaussian blur (dependent on cloud thickness). Value of 0 will disable this feature.
+
+            cloud_color (bool): If True, it will adjust the color of the cloud based on the mean color of the clear sky image
+            
+            invert (bool) : for some applications, the cloud can be inverted to effectively decrease the level of reflected power (see thermal example in the notebook)
+            
+        Returns:
+    
+            Tensor: Tensor containing a mixed image
+    
+    """
+    
+    # blurring background (optional)
+    if blur_scaling != 0.0:
+        modulator = 1-cloud.permute(2,0,1).mean(0)
+        input = local_gaussian_blur(input.permute(2,0,1),
+                                    blur_scaling*modulator)[0].permute(1,2,0)
+        
+    # mix the cloud
+    if invert:
+        output = input * (1 - cloud)
+    else:
+        cloud_base = torch.ones_like(input) if not cloud_color else cloud_hue(input, 1-cloud)
+        output = input * cloud + cloud_base * (1-cloud)
+        
+    return output
+    
+
 def add_cloud(input,
               max_lvl=(0.95,1.0),
               min_lvl=(0.0, 0.05),
@@ -127,18 +163,7 @@ def add_cloud(input,
                                   align_corners=True)
     cloud = cloud.permute(1,2,0)
     
-    # blurring background (optional)
-    if blur_scaling != 0.0:
-        modulator = 1-cloud.permute(2,0,1).mean(0)
-        input = local_gaussian_blur(input.permute(2,0,1),
-                                    blur_scaling*modulator)[0].permute(1,2,0)
-        
-    # mix the cloud
-    if invert:
-        output = input * (1 - cloud)
-    else:
-        cloud_base = torch.ones_like(input) if not cloud_color else cloud_hue(input, 1-cloud)
-        output = input * cloud + cloud_base * (1-cloud)
+    output = mix(input, cloud, blur_scaling=blur_scaling, cloud_color=cloud_color, invert=invert)
     
     if not return_cloud:
         return output
