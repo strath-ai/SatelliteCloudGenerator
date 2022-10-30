@@ -10,20 +10,29 @@ from .noise import *
 def misalign_channels(cloud):
     return cloud
 
-def cloud_hue(image, cloud):
+def cloud_hue(image, cloud, scale=5):
+    """
+        Mixes the pure white base of a cloud with mean color of the underlying image
+        
+        scale (float) controls how 'white' the end result is (the lower the value, the more color the cloud will have)
+    """
     # Mean Cloud-Free Color
     mean_color = image.mean((0,1))
     ambience = torch.ones_like(image)
     
+    mask=(cloud*scale).clip(0,1)
+    
     if all(mean_color==0):
         return ambience # prevent mixing with pitch black
     else:
-        return ambience*cloud + (mean_color/mean_color.mean())*ambience*(1-cloud)
+        color_vector=(mean_color/mean_color.mean())
+        color_vector/=color_vector.max() # ensure that no value exceeds 1.0
+        return ambience*mask + color_vector*ambience*(1-mask)
     
 
 # --- Mixing Methods
 
-def mix(input, cloud, blur_scaling=2.0, cloud_color=True, invert=False):
+def mix(input, cloud, shadow=None, blur_scaling=2.0, cloud_color=True, invert=False):
     """ Mixing Operation for an input image and a cloud
     
         Args:
@@ -42,19 +51,22 @@ def mix(input, cloud, blur_scaling=2.0, cloud_color=True, invert=False):
             Tensor: Tensor containing a mixed image
     
     """
+    if shadow is not None:
+        # reuse the same function, with shadow mask as 'cloud' mask (and inverting the 
+        input=mix(input, shadow, blur_scaling=0.0, cloud_color=False, invert=not invert)
     
     # blurring background (optional)
     if blur_scaling != 0.0:
-        modulator = 1-cloud.permute(2,0,1).mean(0)
+        modulator = cloud.permute(2,0,1).mean(0)
         input = local_gaussian_blur(input.permute(2,0,1),
                                     blur_scaling*modulator)[0].permute(1,2,0)
         
     # mix the cloud
     if invert:
-        output = input * (1 - cloud)
+        output = input * (1-cloud)
     else:
         cloud_base = torch.ones_like(input) if not cloud_color else cloud_hue(input, 1-cloud)
-        output = input * cloud + cloud_base * (1-cloud)
+        output = input * (1-cloud) + cloud_base * (cloud)
         
     return output
     
@@ -77,9 +89,9 @@ def add_cloud(input,
         and returns a generated cloudy version of the input image
     
     Args:
-        max_lvl (float or tuple of floats): Indicates the maximum strength of the clear image (1.0 means that some pixels will be clear)
+        max_lvl (float or tuple of floats): Indicates the maximum strength of the cloud (1.0 means that some pixels will be fully non-transparent)
         
-        min_lvl (float or tuple of floats): Indicates the minimum strength of the clear image (0.0 means that some pixels will have full cloud)
+        min_lvl (float or tuple of floats): Indicates the minimum strength of the cloud (0.0 means that some pixels will have no cloud)
         clear_threshold (float): An optional threshold for cutting off some part of the initial generated cloud mask
         
         noise_type (string: 'perlin', 'flex'): Method of noise generation (currently supported: 'perlin', 'flex')
@@ -137,7 +149,7 @@ def add_cloud(input,
         
         net_noise_shape*=noise_shape
 
-    noise_shape = torch.FloatTensor((1-net_noise_shape))
+    noise_shape = torch.FloatTensor(net_noise_shape)
         
     # apply non-linearities
     noise_shape[noise_shape < clear_threshold] = 0.0
@@ -161,6 +173,7 @@ def add_cloud(input,
                                   (h,w),
                                   interpolation='bilinear',
                                   align_corners=True)
+                
     cloud = cloud.permute(1,2,0)
     
     output = mix(input, cloud, blur_scaling=blur_scaling, cloud_color=cloud_color, invert=invert)
@@ -168,7 +181,7 @@ def add_cloud(input,
     if not return_cloud:
         return output
     else:
-        return output, 1.0-cloud if not invert else cloud
+        return output, cloud# if not invert else 1-cloud
 
 def add_cloud_and_shadow(input,
                          max_lvl=(0.95,1.0),
@@ -187,9 +200,9 @@ def add_cloud_and_shadow(input,
         and returns a generated cloudy version of the input image, with additional shadows added to the ground image
     
     Args:
-        max_lvl (float or tuple of floats): Indicates the maximum strength of the clear image (1.0 means that some pixels will be clear)
+        max_lvl (float or tuple of floats): Indicates the maximum strength of the cloud (1.0 means that some pixels will be fully non-transparent)
         
-        min_lvl (float or tuple of floats): Indicates the minimum strength of the clear image (0.0 means that some pixels will have full cloud)
+        min_lvl (float or tuple of floats): Indicates the minimum strength of the cloud (0.0 means that some pixels will have no cloud)
         clear_threshold (float): An optional threshold for cutting off some part of the initial generated cloud mask
         
         noise_type (string: 'perlin', 'flex'): Method of noise generation (currently supported: 'perlin', 'flex')
