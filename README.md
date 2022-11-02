@@ -1,5 +1,10 @@
 # :cloud: Satellite Cloud Generator
 [![Open In Collab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/cidcom/SatelliteCloudGenerator/blob/main/01c_Usage_Examples_Colab.ipynb) [![DOI](https://zenodo.org/badge/532972529.svg)](https://zenodo.org/badge/latestdoi/532972529)
+[![[YouTube]](https://img.shields.io/badge/YouTube-%23FF0000.svg?style=flat&logo=youtube&logoColor=white)](https://youtu.be/RgAF2Y4O9zA)
+
+:star: **NEW:** This tool has been featured in the 📺 first episode of the [**satellite-image-deep-learning podcast**](https://youtu.be/RgAF2Y4O9zA)! :star: 
+
+---
 
 A PyTorch-based tool for simulating clouds in satellite images.
 
