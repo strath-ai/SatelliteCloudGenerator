@@ -10,7 +10,7 @@ from .noise import *
 def misalign_channels(cloud):
     return cloud
 
-def cloud_hue(image, cloud, scale=5):
+def cloud_hue(image, cloud, scale=1.0):
     """
         Mixes the pure white base of a cloud with mean color of the underlying image
         
@@ -65,7 +65,7 @@ def mix(input, cloud, shadow=None, blur_scaling=2.0, cloud_color=True, invert=Fa
     if invert:
         output = input * (1-cloud)
     else:
-        cloud_base = torch.ones_like(input) if not cloud_color else cloud_hue(input, 1-cloud)
+        cloud_base = torch.ones_like(input) if not cloud_color else cloud_hue(input, cloud)
         output = input * (1-cloud) + cloud_base * (cloud)
         
     return output
