@@ -186,6 +186,7 @@ def add_cloud(input,
 def add_cloud_and_shadow(input,
                          max_lvl=(0.95,1.0),
                          min_lvl=(0.0, 0.05),
+                         shadow_max_lvl=0.3,
                          clear_threshold=0.0,
                          noise_type = 'perlin',
                          const_scale=True,
@@ -204,6 +205,8 @@ def add_cloud_and_shadow(input,
         
         min_lvl (float or tuple of floats): Indicates the minimum strength of the cloud (0.0 means that some pixels will have no cloud)
         clear_threshold (float): An optional threshold for cutting off some part of the initial generated cloud mask
+        
+        shadow_max_lvl (float): Indicates the maximum strength of the cloud (1.0 means that some pixels will be completely black)
         
         noise_type (string: 'perlin', 'flex'): Method of noise generation (currently supported: 'perlin', 'flex')
         
@@ -229,8 +232,8 @@ def add_cloud_and_shadow(input,
     
     # 1. Add Shadows
     input, shadow_mask = add_cloud(input,
-                                   max_lvl=0.7,
-                                   min_lvl=(0.0, 0.05),
+                                   max_lvl=shadow_max_lvl,
+                                   min_lvl=0.0,
                                    clear_threshold=0.5,
                                    noise_type = 'perlin',
                                    const_scale=const_scale,
