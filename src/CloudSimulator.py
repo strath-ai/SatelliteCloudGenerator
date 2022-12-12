@@ -69,6 +69,20 @@ def mix(input, cloud, shadow=None, blur_scaling=2.0, cloud_color=True, invert=Fa
         output = input * (1-cloud) + cloud_base * (cloud)
         
     return output
+
+class CloudGenerator(torch.nn.Module):
+    
+    """ Wrapper object for 
+    
+    
+    """
+    
+    def __init__(self, config):
+        super().__init__()
+        self.config=config
+        
+    def forward(self,img):
+        return add_cloud(img,**self.config)
     
 
 def add_cloud(input,
@@ -129,8 +143,10 @@ def add_cloud(input,
     if isinstance(min_lvl, tuple) or isinstance(min_lvl, list):
         min_lvl = min_lvl[0] +(min_lvl[1]-min_lvl[0])*torch.rand(1).item()
         
+    # max_lvl is dependent on min_lvl (cannot be less than min_lvl)
     if isinstance(max_lvl, tuple) or isinstance(max_lvl, list):
-        max_lvl = max_lvl[0] + (max_lvl[1]-max_lvl[0])*torch.rand(1).item()
+        max_floor=max([max_lvl[0],min_lvl])
+        max_lvl = max_floor + (max_lvl[1]-max_floor)*torch.rand(1).item()
       
     locality_degree=max([1, int(locality_degree)])
     
