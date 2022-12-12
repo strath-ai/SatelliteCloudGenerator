@@ -2,9 +2,11 @@ import torch as torch
 import numpy as np
 from matplotlib import pyplot as plt
 import kornia.geometry.transform as KT
+import random
 
 from .LocalGaussianBlur import *
 from .noise import *
+from .configs import *
 
 # --- Extra Functions
 def misalign_channels(cloud):
@@ -72,18 +74,61 @@ def mix(input, cloud, shadow=None, blur_scaling=2.0, cloud_color=True, invert=Fa
 
 class CloudGenerator(torch.nn.Module):
     
-    """ Wrapper object for 
+    """ Wrapper object for the add_cloud() and add_cloud_and_shadow() methods.
+        It stores the parameters to these functions in a config dictionary
     
     
     """
     
-    def __init__(self, config):
+    def __init__(self,
+                 config,
+                 cloud_p=1.0,
+                 shadow_p=1.0
+                ):
         super().__init__()
-        self.config=config
         
-    def forward(self,img):
-        return add_cloud(img,**self.config)
+        self.cloud_p=cloud_p
+        self.shadow_p=shadow_p        
+        
+        if isinstance(config,dict):
+            self.config=[config] # put into a list if it's a single config
+        else:
+            self.config=config
+            
+    def choose_config(self):
+        return random.choice(self.config)
+        
+    def forward(self,img,return_cloud=False):
+        # decide which config from the list (if multiple)
+        used_config=self.choose_config()
+        
+        # decide what to simulate
+        do_cloud=random.random()<=self.cloud_p
+        do_shadow=random.random()<=self.shadow_p
+        
+        if do_shadow and do_cloud:
+            return add_cloud_and_shadow(img,**used_config, return_cloud=return_cloud)
+        elif do_cloud:
+            return add_cloud(img,**used_config,return_cloud=return_cloud)
+        else:
+            return img
+        
+    def __or__(self, other):
+        cfg1=self.config
+        cfg2=other.config
+        # inherit maximum probability of the two parents
+        cloud_p=max([self.cloud_p, other.cloud_p])
+        shadow_p=max([self.shadow_p, other.shadow_p])
+        return CloudGenerator(config=cfg1+cfg2,
+                              cloud_p=cloud_p,
+                              shadow_p=shadow_p)
     
+    def __str__(self):
+        N=len(self.config)
+        return ("CloudGenerator({} config(s):" + N*"\n{}" + ")").format(N,*self.config)
+    
+    def __repr__(self):
+        return self.__str__()    
 
 def add_cloud(input,
               max_lvl=(0.95,1.0),
@@ -140,6 +185,8 @@ def add_cloud(input,
     
     h,w,c = input.shape[-3:]
     
+    # --- Potential Sampling of Parameters (if provided as a range)
+    
     if isinstance(min_lvl, tuple) or isinstance(min_lvl, list):
         min_lvl = min_lvl[0] +(min_lvl[1]-min_lvl[0])*torch.rand(1).item()
         
@@ -147,7 +194,23 @@ def add_cloud(input,
     if isinstance(max_lvl, tuple) or isinstance(max_lvl, list):
         max_floor=max([max_lvl[0],min_lvl])
         max_lvl = max_floor + (max_lvl[1]-max_floor)*torch.rand(1).item()
-      
+        
+    # ensure max_lvl does not go below min_lvl
+    max_lvl=max([min_lvl,max_lvl])
+        
+    # clear_threshold
+    if isinstance(clear_threshold, tuple) or isinstance(clear_threshold, list):
+        clear_threshold = clear_threshold[0] +(clear_threshold[1]-clear_threshold[0])*torch.rand(1).item()
+        
+    # decay_factor
+    if isinstance(decay_factor, tuple) or isinstance(decay_factor, list):
+        decay_factor = decay_factor[0] +(decay_factor[1]-decay_factor[0])*torch.rand(1).item()
+        
+    # locality_degree
+    if isinstance(locality_degree, tuple) or isinstance(locality_degree, list):
+        locality_degree = locality_degree[0] +torch.randint(1+locality_degree[1]-locality_degree[0],(1,1)).item()
+    
+    # --- End of Parameter Sampling
     locality_degree=max([1, int(locality_degree)])
     
     net_noise_shape=torch.ones((h,w))
@@ -247,6 +310,10 @@ def add_cloud_and_shadow(input,
     """  
     
     # 1. Add Shadows
+    if isinstance(locality_degree,int):
+        shadow_locality_degree=locality_degree-1
+    else:
+        shadow_locality_degree=[i-1 for i in locality_degree]
     input, shadow_mask = add_cloud(input,
                                    max_lvl=shadow_max_lvl,
                                    min_lvl=0.0,
@@ -254,7 +321,7 @@ def add_cloud_and_shadow(input,
                                    noise_type = 'perlin',
                                    const_scale=const_scale,
                                    decay_factor=1.5, # Suppress HF detail
-                                   locality_degree=locality_degree-1, # make similar locality as cloud (-1 works well because it's lower frequency)
+                                   locality_degree=shadow_locality_degree, # make similar locality as cloud (-1 works well because it's lower frequency)
                                    invert=True, # Invert Color for shadow
                                    channel_offset=0, # Cloud SFX disabled
                                    blur_scaling=0.0, # Cloud SFX disabled
