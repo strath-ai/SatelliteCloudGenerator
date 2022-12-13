@@ -9,6 +9,7 @@ from .noise import *
 from .configs import *
 
 # --- Extra Functions
+
 def misalign_channels(cloud):
     return cloud
 
@@ -106,12 +107,34 @@ class CloudGenerator(torch.nn.Module):
         do_cloud=random.random()<=self.cloud_p
         do_shadow=random.random()<=self.shadow_p
         
+        # synth both cloud and shadow
         if do_shadow and do_cloud:
-            return add_cloud_and_shadow(img,**used_config, return_cloud=return_cloud)
+            out=add_cloud_and_shadow(img,**used_config, return_cloud=return_cloud)
+            
+            if return_cloud:
+                out,cloud,shadow=out
+            else:
+                out,cloud=out
+                shadow=torch.zeros_like(out)
+        # synth only cloud
         elif do_cloud:
-            return add_cloud(img,**used_config,return_cloud=return_cloud)
+            out=add_cloud(img,**used_config,return_cloud=return_cloud)   
+            
+            if return_cloud:
+                out,cloud=out
+                shadow=torch.zeros_like(out)
+            else:
+                cloud,shadow=torch.zeros_like(out),torch.zeros_like(out)
+        # no additions
         else:
-            return img
+            out=torch.from_numpy(img)
+            cloud,shadow=torch.zeros_like(out),torch.zeros_like(out)
+        
+        # return format
+        if return_cloud:
+            return out,cloud,shadow
+        else:
+            return out
         
     def __or__(self, other):
         cfg1=self.config
@@ -125,10 +148,20 @@ class CloudGenerator(torch.nn.Module):
     
     def __str__(self):
         N=len(self.config)
-        return ("CloudGenerator({} config(s):" + N*"\n{}" + ")").format(N,*self.config)
+        
+        return ("CloudGenerator(cloud_p={:.2f},shadow_p={:.2f},{} config(s))").format(self.cloud_p,self.shadow_p,N)
     
     def __repr__(self):
-        return self.__str__()    
+        N=len(self.config)
+        
+        config_desc=""
+        for c in self.config:
+            config_desc+="\n{"
+            for key in c:
+                config_desc+="\t{}: {}\n".format(key,c[key])
+            config_desc+="}"
+        
+        return ("CloudGenerator(cloud_p={:.2f},shadow_p={:.2f},\n{} config(s):{})").format(self.cloud_p,self.shadow_p,N,config_desc)
 
 def add_cloud(input,
               max_lvl=(0.95,1.0),
@@ -140,6 +173,7 @@ def add_cloud(input,
               locality_degree=1,
               invert=False,
               channel_offset=2,
+              channel_magnitude_shift=0.05,
               blur_scaling=2.0,
               cloud_color=True,
               return_cloud=False
@@ -164,6 +198,8 @@ def add_cloud(input,
         invert (bool) : for some applications, the cloud can be inverted to effectively decrease the level of reflected power (see thermal example in the notebook)
         
         channel_offset (int): optional offset that can randomly misalign spatially the individual cloud mask channels (by a value in range -channel_offset and +channel_offset)
+        
+        channel_magniutde_shift (float): optional offset from the reference cloud mask magnitude for individual channels, if non-zero, then each channel will have a cloud magnitude uniformly sampled from C+-channel_magnitude, where C is the reference cloud mask
         
         blur_scaling (float): Scaling factor for the variance of locally varying Gaussian blur (dependent on cloud thickness). Value of 0 will disable this feature.
         
@@ -236,7 +272,14 @@ def add_cloud(input,
     noise_shape = noise_shape.clip(0,1)
     noise_shape /= noise_shape.max()
 
+    # channel-wise mask
     cloud = torch.stack(c*[1.0*noise_shape*(max_lvl-min_lvl) + min_lvl], 0)
+    
+    # channel-wise thickness difference
+    if channel_magnitude_shift != 0.0:
+        channel_magnitude_shift=abs(channel_magnitude_shift)
+        weights=channel_magnitude_shift*(2*torch.rand(c)-1)+1
+        cloud=(weights[:,None,None]*cloud).clip(0,1)
     
     # channel offset (optional)
     if channel_offset != 0:
@@ -265,13 +308,14 @@ def add_cloud(input,
 def add_cloud_and_shadow(input,
                          max_lvl=(0.95,1.0),
                          min_lvl=(0.0, 0.05),
-                         shadow_max_lvl=0.3,
+                         shadow_max_lvl=[0.3,0.6],
                          clear_threshold=0.0,
                          noise_type = 'perlin',
                          const_scale=True,
                          decay_factor=1,
                          locality_degree=1,
                          channel_offset=2,
+                         channel_magnitude_shift=0.05,
                          blur_scaling=2.0,
                          cloud_color=True,
                          return_cloud=False
@@ -314,16 +358,18 @@ def add_cloud_and_shadow(input,
         shadow_locality_degree=locality_degree-1
     else:
         shadow_locality_degree=[i-1 for i in locality_degree]
+        
     input, shadow_mask = add_cloud(input,
                                    max_lvl=shadow_max_lvl,
                                    min_lvl=0.0,
-                                   clear_threshold=0.5,
+                                   clear_threshold=0.4,
                                    noise_type = 'perlin',
                                    const_scale=const_scale,
                                    decay_factor=1.5, # Suppress HF detail
                                    locality_degree=shadow_locality_degree, # make similar locality as cloud (-1 works well because it's lower frequency)
                                    invert=True, # Invert Color for shadow
                                    channel_offset=0, # Cloud SFX disabled
+                                   channel_magnitude_shift=0.0, # Cloud SFX disable
                                    blur_scaling=0.0, # Cloud SFX disabled
                                    cloud_color=False, # Cloud SFX disabled
                                    return_cloud=True
@@ -340,6 +386,7 @@ def add_cloud_and_shadow(input,
                                   locality_degree=locality_degree,
                                   invert=False,
                                   channel_offset=channel_offset,
+                                  channel_magnitude_shift=channel_magnitude_shift,
                                   blur_scaling=blur_scaling,
                                   cloud_color=cloud_color,
                                   return_cloud=True
