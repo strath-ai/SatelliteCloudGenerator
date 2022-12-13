@@ -7,6 +7,7 @@ import random
 from .LocalGaussianBlur import *
 from .noise import *
 from .configs import *
+from .extras import *
 
 # --- Extra Functions
 
@@ -114,8 +115,7 @@ class CloudGenerator(torch.nn.Module):
             if return_cloud:
                 out,cloud,shadow=out
             else:
-                out,cloud=out
-                shadow=torch.zeros_like(out)
+                cloud,shadow=None,None
         # synth only cloud
         elif do_cloud:
             out=add_cloud(img,**used_config,return_cloud=return_cloud)   
@@ -124,7 +124,7 @@ class CloudGenerator(torch.nn.Module):
                 out,cloud=out
                 shadow=torch.zeros_like(out)
             else:
-                cloud,shadow=torch.zeros_like(out),torch.zeros_like(out)
+                cloud,shadow=None,None
         # no additions
         else:
             out=torch.from_numpy(img)
