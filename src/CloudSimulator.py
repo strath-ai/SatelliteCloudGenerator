@@ -126,8 +126,8 @@ class CloudGenerator(torch.nn.Module):
             else:
                 cloud,shadow=None,None
         # no additions
-        else:
-            out=torch.from_numpy(img)
+        else:            
+            out=torch.from_numpy(img) if not torch.is_tensor(img) else img
             cloud,shadow=torch.zeros_like(out),torch.zeros_like(out)
         
         # return format
