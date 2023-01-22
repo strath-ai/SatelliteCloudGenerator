@@ -233,11 +233,12 @@ def add_cloud(input,
         
     # max_lvl is dependent on min_lvl (cannot be less than min_lvl)
     if isinstance(max_lvl, tuple) or isinstance(max_lvl, list):
-        max_floor=min_lvl+max(0,max_lvl[0]-min_lvl)
+        max_lvl=torch.tensor(max_lvl, device=device)
+        max_floor=min_lvl+F.relu(max_lvl[0]-min_lvl)
         max_lvl = max_floor + (max_lvl[1]-max_floor)*torch.rand([b,1,1,1], device=device)
         
     # ensure max_lvl does not go below min_lvl
-    max_lvl=min_lvl+max(0,max_lvl-min_lvl)
+    max_lvl=min_lvl+F.relu(max_lvl-min_lvl)
         
     # clear_threshold
     if isinstance(clear_threshold, tuple) or isinstance(clear_threshold, list):
