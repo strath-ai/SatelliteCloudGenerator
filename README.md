@@ -11,7 +11,7 @@ A PyTorch-based tool for simulating clouds in satellite images.
 This tool allows for generating artificial clouds in an image using structural noise, such as Perlin noise; intended for applications where pairs of clear-sky and cloudy images are required or useful.
 For example, it can be used to **generate training data** for tasks such as **cloud detection** or **cloud removal**, or simply as a method of **augmentation** of satellite image data for other tasks.
 
-The images must be in shape `(height, width, channel)` and are also returned in that format.
+The images must be in shape `(channel, height, width)` or `(batch, channel, height, width)` and are also returned in that format.
 
 > If you found this tool useful, please cite accordingly:
 ```bibtex

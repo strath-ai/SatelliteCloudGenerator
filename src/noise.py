@@ -13,10 +13,10 @@ def output_transform(x):
 def interp(t):
     return 3 * t**2 - 2 * t ** 3
 
-def perlin(width, height, scale=10, device=None):
+def perlin(width, height, scale=10, batch=1, device=None):
     # based on https://gist.github.com/adefossez/0646dbe9ed4005480a2407c62aac8869
     
-    gx, gy = torch.randn(2, width + 1, height + 1, 1, 1, device=device)
+    gx, gy = torch.randn(2, batch, width + 1, height + 1, 1, 1, device=device)
     xs = torch.linspace(0, 1, scale + 1)[:-1, None].to(device)
     ys = torch.linspace(0, 1, scale + 1)[None, :-1].to(device)
 
@@ -24,12 +24,12 @@ def perlin(width, height, scale=10, device=None):
     wy = 1 - interp(ys)
     
     dots = 0
-    dots += wx * wy * (gx[:-1, :-1] * xs + gy[:-1, :-1] * ys)
-    dots += (1 - wx) * wy * (-gx[1:, :-1] * (1 - xs) + gy[1:, :-1] * ys)
-    dots += wx * (1 - wy) * (gx[:-1, 1:] * xs - gy[:-1, 1:] * (1 - ys))
-    dots += (1 - wx) * (1 - wy) * (-gx[1:, 1:] * (1 - xs) - gy[1:, 1:] * (1 - ys))
+    dots += wx * wy * (gx[:,:-1, :-1] * xs + gy[:,:-1, :-1] * ys)
+    dots += (1 - wx) * wy * (-gx[:,1:, :-1] * (1 - xs) + gy[:,1:, :-1] * ys)
+    dots += wx * (1 - wy) * (gx[:,:-1, 1:] * xs - gy[:,:-1, 1:] * (1 - ys))
+    dots += (1 - wx) * (1 - wy) * (-gx[:,1:, 1:] * (1 - xs) - gy[:,1:, 1:] * (1 - ys))
 
-    return dots.permute(0, 2, 1, 3).contiguous().view(width * scale, height * scale)
+    return dots.permute(0, 1, 3, 2, 4).contiguous().view(batch, width * scale, height * scale)
 
 def perlin_ms(octaves=[1, 1, 1, 1], width=2, height=2, device=None):
     scale = 2 ** len(octaves)
@@ -42,26 +42,24 @@ def perlin_ms(octaves=[1, 1, 1, 1], width=2, height=2, device=None):
         height *= 2
     return out
 
-def generate_perlin(scales=None, shape=(256,256), weights=None, const_scale=True, decay_factor=1):
+def generate_perlin(scales=None, shape=(256,256), batch=1, weights=None, const_scale=True, decay_factor=1):
     # Set Up Scales
     if scales is None:
-        up_lim = max([2, int(np.log2(min(shape)))-1])
+        up_lim = max([2, int(np.log2(min(shape)))-1])        
         
         scales = [2**i for i in range(2,up_lim)]
         # proportional to image size, if const_scale is preserved
         if const_scale:
             f = int(2**np.floor(np.log2(0.25*max(shape)/max(scales))))
             scales = [el*f for el in scales]
-    
+
     if weights is None:
         weights = [el**decay_factor for el in scales]
-
     # Round shape to nearest power of 2 
     big_shape = [int(2**(np.ceil(np.log2(i)))) for i in shape]
-    out = torch.zeros(shape)
-        
+    out = torch.zeros([batch,*shape])
     for scale, weight in zip(scales, weights):
-        out += weight*perlin(int(big_shape[0]/scale), int(big_shape[1]/scale), scale)[:shape[0],:shape[1]]
+        out += weight*perlin(int(big_shape[0]/scale), int(big_shape[1]/scale), scale=scale, batch=batch)[...,:shape[0],:shape[1]]
 
     return output_transform(out)
 

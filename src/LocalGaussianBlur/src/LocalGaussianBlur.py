@@ -1,5 +1,3 @@
-# Taken from https://github.com/mikonvergence/LocalGaussianBlur
-
 import torch
 from torch import Tensor
 
@@ -56,13 +54,13 @@ def local_gaussian_blur(input, modulator, kernel_size=11):
     # 1. pad the input with replicated values
     inp_pad = torch.nn.functional.pad(input, pad=(pad,pad,pad,pad), mode='replicate')
     # 2. Create a Tensor of varying Gaussian Kernel
-    kernels = gaussian_kernels(modulator.flatten())
+    kernels = gaussian_kernels(modulator.flatten()).view(b,-1,kernel_size,kernel_size)    
     kernels_rgb = torch.stack(c*[kernels], 1)
     # 3. Unfold input
-    inp_unf = torch.nn.functional.unfold(inp_pad, (kernel_size,kernel_size))   
+    inp_unf = torch.nn.functional.unfold(inp_pad, (kernel_size,kernel_size))  
     # 4. Multiply kernel with unfolded
     x1 = inp_unf.view(b,c,-1,h*w)
-    x2 = kernels_rgb.view(h*w, c, -1).permute(1,2,0).unsqueeze(0)
+    x2 = kernels_rgb.view(b,c,h*w,-1).permute(0,1,3,2)#.unsqueeze(0)
     y = (x1*x2).sum(2)
     # 5. Fold and return
     return torch.nn.functional.fold(y,(h,w),(1,1))

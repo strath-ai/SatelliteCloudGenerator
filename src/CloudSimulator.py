@@ -1,4 +1,5 @@
 import torch as torch
+from torch.nn import functional as F
 import numpy as np
 from matplotlib import pyplot as plt
 import kornia.geometry.transform as KT
@@ -21,17 +22,19 @@ def cloud_hue(image, cloud, scale=1.0):
         scale (float) controls how 'white' the end result is (the lower the value, the more color the cloud will have)
     """
     # Mean Cloud-Free Color
-    mean_color = image.mean((0,1))
+    mean_color = image.mean((-2,-1))
     ambience = torch.ones_like(image)
     
     mask=(cloud*scale).clip(0,1)
     
-    if all(mean_color==0):
-        return ambience # prevent mixing with pitch black
-    else:
-        color_vector=(mean_color/mean_color.mean())
-        color_vector/=color_vector.max() # ensure that no value exceeds 1.0
-        return ambience*mask + color_vector*ambience*(1-mask)
+    # Safety against pitch black
+    for b_idx in range(mean_color.shape[0]):
+        if all(mean_color[b_idx])==0:
+            mean_color[b_idx]=torch.ones_like(mean_color[b_idx]) # prevent mixing with pitch black
+        
+    color_vector=mean_color/mean_color.mean(1,keepdim=True)
+    color_vector/=color_vector.max(1,keepdim=True)[0] # ensure that no value exceeds 1.0        
+    return ambience*mask + color_vector.unsqueeze(-1).unsqueeze(-1)*ambience*(1-mask)
     
 
 # --- Mixing Methods
@@ -61,9 +64,9 @@ def mix(input, cloud, shadow=None, blur_scaling=2.0, cloud_color=True, invert=Fa
     
     # blurring background (optional)
     if blur_scaling != 0.0:
-        modulator = cloud.permute(2,0,1).mean(0)
-        input = local_gaussian_blur(input.permute(2,0,1),
-                                    blur_scaling*modulator)[0].permute(1,2,0)
+        modulator = cloud.mean(1) # average cloud thickness
+        input = local_gaussian_blur(input,
+                                    blur_scaling*modulator)
         
     # mix the cloud
     if invert:
@@ -109,13 +112,14 @@ class CloudGenerator(torch.nn.Module):
         do_shadow=random.random()<=self.shadow_p
         
         # synth both cloud and shadow
-        if do_shadow and do_cloud:
+        if do_shadow and do_cloud:           
             out=add_cloud_and_shadow(img,**used_config, return_cloud=return_cloud)
             
             if return_cloud:
                 out,cloud,shadow=out
             else:
                 cloud,shadow=None,None
+                
         # synth only cloud
         elif do_cloud:
             out=add_cloud(img,**used_config,return_cloud=return_cloud)   
@@ -216,35 +220,35 @@ def add_cloud(input,
     if not torch.is_tensor(input):
         input = torch.FloatTensor(input)
     
-    if len(input.shape) == 2:
-        input = input.unsqueeze(-1)
+    while len(input.shape) < 4:
+        input = input.unsqueeze(0)  
     
-    h,w,c = input.shape[-3:]
+    b,c,h,w = input.shape
     
     # --- Potential Sampling of Parameters (if provided as a range)
     
     if isinstance(min_lvl, tuple) or isinstance(min_lvl, list):
-        min_lvl = min_lvl[0] +(min_lvl[1]-min_lvl[0])*torch.rand(1).item()
+        min_lvl = min_lvl[0] +(min_lvl[1]-min_lvl[0])*torch.rand([b,1,1,1])
         
     # max_lvl is dependent on min_lvl (cannot be less than min_lvl)
     if isinstance(max_lvl, tuple) or isinstance(max_lvl, list):
-        max_floor=max([max_lvl[0],min_lvl])
-        max_lvl = max_floor + (max_lvl[1]-max_floor)*torch.rand(1).item()
+        max_floor=min_lvl+np.maximum(0,max_lvl[0]-min_lvl)
+        max_lvl = max_floor + (max_lvl[1]-max_floor)*torch.rand([b,1,1,1])
         
     # ensure max_lvl does not go below min_lvl
-    max_lvl=max([min_lvl,max_lvl])
+    max_lvl=min_lvl+np.maximum(0,max_lvl-min_lvl)   
         
     # clear_threshold
     if isinstance(clear_threshold, tuple) or isinstance(clear_threshold, list):
-        clear_threshold = clear_threshold[0] +(clear_threshold[1]-clear_threshold[0])*torch.rand(1).item()
+        clear_threshold = clear_threshold[0] +(clear_threshold[1]-clear_threshold[0])*torch.rand([b,1,1])
         
     # decay_factor
     if isinstance(decay_factor, tuple) or isinstance(decay_factor, list):
-        decay_factor = decay_factor[0] +(decay_factor[1]-decay_factor[0])*torch.rand(1).item()
+        decay_factor = float(decay_factor[0] +(decay_factor[1]-decay_factor[0])*torch.rand([1,1]))
         
     # locality_degree
     if isinstance(locality_degree, tuple) or isinstance(locality_degree, list):
-        locality_degree = locality_degree[0] +torch.randint(1+locality_degree[1]-locality_degree[0],(1,1)).item()
+        locality_degree = int(locality_degree[0]+torch.randint(1+locality_degree[1]-locality_degree[0],(1,1)))
     
     # --- End of Parameter Sampling
     locality_degree=max([1, int(locality_degree)])
@@ -253,7 +257,7 @@ def add_cloud(input,
     for idx in range(locality_degree):
         # generate noise shape
         if noise_type == 'perlin':
-            noise_shape = generate_perlin(shape=(h,w), const_scale=const_scale, decay_factor=decay_factor).numpy()              
+            noise_shape = generate_perlin(shape=(h,w), batch=b, const_scale=const_scale, decay_factor=decay_factor).numpy()              
         elif noise_type == 'flex':
             noise_shape = flex_noise(h,w, const_scale=const_scale, decay_factor=decay_factor).numpy()
         else:
@@ -273,7 +277,7 @@ def add_cloud(input,
     noise_shape /= noise_shape.max()
 
     # channel-wise mask
-    cloud = torch.stack(c*[1.0*noise_shape*(max_lvl-min_lvl) + min_lvl], 0)
+    cloud=(noise_shape.unsqueeze(1)*(max_lvl-min_lvl) + min_lvl).expand(b,c,h,w)
     
     # channel-wise thickness difference
     if channel_magnitude_shift != 0.0:
@@ -287,16 +291,14 @@ def add_cloud(input,
         
         crop_val = offsets.max().abs()
         if crop_val != 0:
-            for ch in range(cloud.shape[0]):
-                cloud[ch] = torch.roll(cloud[ch], offsets[0,ch].item(),dims=0)
-                cloud[ch] = torch.roll(cloud[ch], offsets[1,ch].item(),dims=1)                    
+            for ch in range(cloud.shape[1]):
+                cloud[:,ch] = torch.roll(cloud[:,ch], offsets[0,ch].item(),dims=-2)
+                cloud[:,ch] = torch.roll(cloud[:,ch], offsets[1,ch].item(),dims=-1)                    
 
-                cloud = KT.resize(cloud[:,crop_val:-crop_val-1, crop_val:-crop_val-1],
+                cloud = KT.resize(cloud[:,:,crop_val:-crop_val-1, crop_val:-crop_val-1],
                                   (h,w),
                                   interpolation='bilinear',
-                                  align_corners=True)
-                
-    cloud = cloud.permute(1,2,0)
+                                  align_corners=True)                
     
     output = mix(input, cloud, blur_scaling=blur_scaling, cloud_color=cloud_color, invert=invert)
     
