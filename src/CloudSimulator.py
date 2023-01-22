@@ -224,23 +224,24 @@ def add_cloud(input,
         input = input.unsqueeze(0)  
     
     b,c,h,w = input.shape
+    device=input.device
     
     # --- Potential Sampling of Parameters (if provided as a range)
     
     if isinstance(min_lvl, tuple) or isinstance(min_lvl, list):
-        min_lvl = min_lvl[0] +(min_lvl[1]-min_lvl[0])*torch.rand([b,1,1,1])
+        min_lvl = min_lvl[0] +(min_lvl[1]-min_lvl[0])*torch.rand([b,1,1,1], device=device)
         
     # max_lvl is dependent on min_lvl (cannot be less than min_lvl)
     if isinstance(max_lvl, tuple) or isinstance(max_lvl, list):
-        max_floor=min_lvl+np.maximum(0,max_lvl[0]-min_lvl)
-        max_lvl = max_floor + (max_lvl[1]-max_floor)*torch.rand([b,1,1,1])
+        max_floor=min_lvl+max(0,max_lvl[0]-min_lvl)
+        max_lvl = max_floor + (max_lvl[1]-max_floor)*torch.rand([b,1,1,1], device=device)
         
     # ensure max_lvl does not go below min_lvl
-    max_lvl=min_lvl+np.maximum(0,max_lvl-min_lvl)   
+    max_lvl=min_lvl+max(0,max_lvl-min_lvl)
         
     # clear_threshold
     if isinstance(clear_threshold, tuple) or isinstance(clear_threshold, list):
-        clear_threshold = clear_threshold[0] +(clear_threshold[1]-clear_threshold[0])*torch.rand([b,1,1])
+        clear_threshold = clear_threshold[0] +(clear_threshold[1]-clear_threshold[0])*torch.rand([b,1,1], device=device)
         
     # decay_factor
     if isinstance(decay_factor, tuple) or isinstance(decay_factor, list):
@@ -253,13 +254,13 @@ def add_cloud(input,
     # --- End of Parameter Sampling
     locality_degree=max([1, int(locality_degree)])
     
-    net_noise_shape=torch.ones((h,w))
+    net_noise_shape=torch.ones((b,h,w),device=device)
     for idx in range(locality_degree):
         # generate noise shape
         if noise_type == 'perlin':
-            noise_shape = generate_perlin(shape=(h,w), batch=b, const_scale=const_scale, decay_factor=decay_factor).numpy()              
+            noise_shape = generate_perlin(shape=(h,w), batch=b, device=device, const_scale=const_scale, decay_factor=decay_factor)      
         elif noise_type == 'flex':
-            noise_shape = flex_noise(h,w, const_scale=const_scale, decay_factor=decay_factor).numpy()
+            noise_shape = flex_noise(h,w, const_scale=const_scale, decay_factor=decay_factor)
         else:
             raise NotImplementedError
 
@@ -267,8 +268,6 @@ def add_cloud(input,
         noise_shape /= noise_shape.max()
         
         net_noise_shape*=noise_shape
-
-    noise_shape = torch.FloatTensor(net_noise_shape)
         
     # apply non-linearities
     noise_shape[noise_shape < clear_threshold] = 0.0
@@ -282,7 +281,7 @@ def add_cloud(input,
     # channel-wise thickness difference
     if channel_magnitude_shift != 0.0:
         channel_magnitude_shift=abs(channel_magnitude_shift)
-        weights=channel_magnitude_shift*(2*torch.rand(c)-1)+1
+        weights=channel_magnitude_shift*(2*torch.rand(c, device=device)-1)+1
         cloud=(weights[:,None,None]*cloud).clip(0,1)
     
     # channel offset (optional)

@@ -17,8 +17,8 @@ def perlin(width, height, scale=10, batch=1, device=None):
     # based on https://gist.github.com/adefossez/0646dbe9ed4005480a2407c62aac8869
     
     gx, gy = torch.randn(2, batch, width + 1, height + 1, 1, 1, device=device)
-    xs = torch.linspace(0, 1, scale + 1)[:-1, None].to(device)
-    ys = torch.linspace(0, 1, scale + 1)[None, :-1].to(device)
+    xs = torch.linspace(0, 1, scale + 1, device=device)[:-1, None]
+    ys = torch.linspace(0, 1, scale + 1, device=device)[None, :-1]
 
     wx = 1 - interp(xs)
     wy = 1 - interp(ys)
@@ -31,18 +31,7 @@ def perlin(width, height, scale=10, batch=1, device=None):
 
     return dots.permute(0, 1, 3, 2, 4).contiguous().view(batch, width * scale, height * scale)
 
-def perlin_ms(octaves=[1, 1, 1, 1], width=2, height=2, device=None):
-    scale = 2 ** len(octaves)
-    out = 0
-    for oct in octaves:
-        p = perlin(width, height, scale, device)
-        out += p * oct
-        scale //= 2
-        width *= 2
-        height *= 2
-    return out
-
-def generate_perlin(scales=None, shape=(256,256), batch=1, weights=None, const_scale=True, decay_factor=1):
+def generate_perlin(scales=None, shape=(256,256), batch=1, device='cpu', weights=None, const_scale=True, decay_factor=1):
     # Set Up Scales
     if scales is None:
         up_lim = max([2, int(np.log2(min(shape)))-1])        
@@ -57,9 +46,9 @@ def generate_perlin(scales=None, shape=(256,256), batch=1, weights=None, const_s
         weights = [el**decay_factor for el in scales]
     # Round shape to nearest power of 2 
     big_shape = [int(2**(np.ceil(np.log2(i)))) for i in shape]
-    out = torch.zeros([batch,*shape])
+    out = torch.zeros([batch,*shape], device=device)
     for scale, weight in zip(scales, weights):
-        out += weight*perlin(int(big_shape[0]/scale), int(big_shape[1]/scale), scale=scale, batch=batch)[...,:shape[0],:shape[1]]
+        out += weight*perlin(int(big_shape[0]/scale), int(big_shape[1]/scale), scale=scale, batch=batch, device=device)[...,:shape[0],:shape[1]]
 
     return output_transform(out)
 
@@ -82,7 +71,7 @@ def default_weight(input, const_scale=True, decay_factor=1):
     return ret
 
 def flex_noise(width, height, spectral_weight=default_weight, const_scale=False, decay_factor=1):
-    
+    raise NotImplemented # This needs to be converted to work with batches, and also generate full on the requested device
     # Source Noise
     x = torch.rand(width,height) - 0.5    
     x_f = torch.fft.rfft2(x)
