@@ -102,6 +102,10 @@ class CloudGenerator(torch.nn.Module):
             
     def choose_config(self):
         return random.choice(self.config)
+    
+    def segmentation_mask(self,*args,**kwargs):
+        # wraps for segmentation mask for external use
+        return segmentation_mask(*args,**kwargs)
         
     def forward(self,img,return_cloud=False):
         # decide which config from the list (if multiple)
