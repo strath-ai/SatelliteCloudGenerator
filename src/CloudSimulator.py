@@ -234,7 +234,7 @@ def add_cloud(input,
         min_lvl = min_lvl[0] +(min_lvl[1]-min_lvl[0])*torch.rand([b,1,1,1], device=device)
         
     # max_lvl is dependent on min_lvl (cannot be less than min_lvl)
-    if len(min_lvl.shape) != 0:        
+    if len(max_lvl.shape) != 0:        
         max_floor=min_lvl+F.relu(max_lvl[0]-min_lvl)
         max_lvl = max_floor + (max_lvl[1]-max_floor)*torch.rand([b,1,1,1], device=device)
         
