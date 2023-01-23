@@ -14,25 +14,26 @@ def segmentation_mask(cloud,shadow=None,thin_range=(0.1,0.1),shadow_threshold=0.
     3: Shadow
     
     
-    Expected input shape for cloud and shadow: (H,W) or (H,W,C)
+    Expected input shape for cloud and shadow: (H,W) or (C,H,W) or (B,C,H,W)
     """
     
-    if len(cloud.shape)==2:
-        cloud.unsqueeze_(-1)
+    while len(cloud.shape)<4:
+        cloud.unsqueeze_(0)
     
     if shadow is None:
         shadow=torch.zeros_like(cloud)
-    elif len(shadow.shape)==2:
-        shadow.unsqueeze_(-1)
+    while len(shadow.shape)<4:
+        shadow.unsqueeze_(0)
         
-    # cloud and shadow are (H,W,C) by now
+    # cloud and shadow are (B,C,H,W) by now
+    b,c,h,w=cloud.shape
         
-    seg_mask=torch.zeros(cloud.shape[:2])
+    seg_mask=torch.zeros(b,h,w)
     
     # get binary representations
-    thick_cloud_b=1.0*(cloud.mean(-1)>=thin_range[1])
-    thin_cloud_b=1.0*(cloud.mean(-1)<thin_range[1])*(cloud.mean(-1)>=thin_range[0])*(1.0-thick_cloud_b)
-    shadow_b=1.0*(shadow.mean(-1)>shadow_threshold)*(1.0-thick_cloud_b)*(1.0-thin_cloud_b)
+    thick_cloud_b=1.0*(cloud.mean(-3)>=thin_range[1])
+    thin_cloud_b=1.0*(cloud.mean(-3)<thin_range[1])*(cloud.mean(-3)>=thin_range[0])*(1.0-thick_cloud_b)
+    shadow_b=1.0*(shadow.mean(-3)>shadow_threshold)*(1.0-thick_cloud_b)*(1.0-thin_cloud_b)
 
     if thin_range[0]==thin_range[1]:
         seg_mask=thick_cloud_b + 2*shadow_b
