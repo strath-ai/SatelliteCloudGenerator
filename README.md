@@ -49,7 +49,14 @@ cloudy, mask = add_cloud(clear,
 
 The `min_lvl` and `max_lvl` control the range of values of the transparency `mask`.
 
-## Features
+### Generator Module
+You can also use a `CloudGenerator` object that binds a specific configuration (or a set of configurations) with the wrapped generation methods:
+```python
+my_gen=CloudGenerator(WIDE_CONFIG,cloud_p=1.0,shadow_p=0.5)
+my_gen(my_image) # will act just like add_cloud_and_shadow() but will preserve the same configuration!
+```
+
+## Selected Features (There's more!)
 Apart from synthesizing a random cloud, the tool provides several additional features (switched on by default) to make the appearance of the clouds more realistic, inspired by [(Lee2019)](https://ieeexplore.ieee.org/document/8803666).
 
 ### 1. Cloud Color
@@ -64,6 +71,7 @@ Spatial offsets between individual cloud image channels can be achieved by setti
 ---
 ### 3. Blur-Under-the-Cloud
 Blurring of the ground image based on the cloud thickness can be achieved by adjusting the `blur_scaling` parameter (with `0.0` disabling the effect). (Disable by passing `blur_scaling=0`)
+> :warning: The blur operation significantly increases memory footprint (caused by the internal `unfold` operation).
 
 ![Blur](imgs/back_blur.png)
 
