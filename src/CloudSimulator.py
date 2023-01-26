@@ -367,6 +367,14 @@ def add_cloud_and_shadow(input,
     else:
         shadow_locality_degree=[i-1 for i in locality_degree]
         
+    # but don't add shadows if cloud level 'floor' is above 0...
+    if isinstance(min_lvl,list) or isinstance(min_lvl,tuple):
+        if min_lvl[0] > 0.0:
+            shadow_max_lvl=0.0
+    else:
+        if min_lvl > 0.0:
+            shadow_max_lvl=0.0
+        
     input, shadow_mask = add_cloud(input,
                                    max_lvl=shadow_max_lvl,
                                    min_lvl=0.0,
