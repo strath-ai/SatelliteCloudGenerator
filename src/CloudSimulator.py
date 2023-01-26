@@ -252,7 +252,7 @@ def add_cloud(input,
     # decay_factor
     if isinstance(decay_factor, tuple) or isinstance(decay_factor, list):
         decay_factor = float(decay_factor[0] +(decay_factor[1]-decay_factor[0])*torch.rand([1,1]))
-        
+
     # locality_degree
     if isinstance(locality_degree, tuple) or isinstance(locality_degree, list):
         locality_degree = int(locality_degree[0]+torch.randint(1+locality_degree[1]-locality_degree[0],(1,1)))
@@ -264,7 +264,7 @@ def add_cloud(input,
     for idx in range(locality_degree):
         # generate noise shape
         if noise_type == 'perlin':
-            noise_shape = generate_perlin(shape=(h,w), batch=b, device=device, const_scale=const_scale, decay_factor=decay_factor)      
+            noise_shape=generate_perlin(shape=(h,w), batch=b, device=device, const_scale=const_scale, decay_factor=decay_factor)     
         elif noise_type == 'flex':
             noise_shape = flex_noise(h,w, const_scale=const_scale, decay_factor=decay_factor)
         else:
@@ -273,16 +273,16 @@ def add_cloud(input,
         noise_shape -= noise_shape.min()
         noise_shape /= noise_shape.max()
         
-        net_noise_shape*=noise_shape
+        net_noise_shape*=noise_shape.detach()
         
     # apply non-linearities
-    noise_shape[noise_shape < clear_threshold] = 0.0
-    noise_shape -= clear_threshold  
-    noise_shape = noise_shape.clip(0,1)
-    noise_shape /= noise_shape.max()
+    net_noise_shape[net_noise_shape < clear_threshold] = 0.0
+    net_noise_shape -= clear_threshold  
+    net_noise_shape = net_noise_shape.clip(0,1)
+    net_noise_shape /= net_noise_shape.max()
 
     # channel-wise mask
-    cloud=(noise_shape.unsqueeze(1)*(max_lvl-min_lvl) + min_lvl).expand(b,c,h,w)
+    cloud=(net_noise_shape.unsqueeze(1)*(max_lvl-min_lvl) + min_lvl).expand(b,c,h,w)
     
     # channel-wise thickness difference
     if channel_magnitude_shift != 0.0:
