@@ -273,13 +273,14 @@ def add_cloud(input,
         noise_shape -= noise_shape.min()
         noise_shape /= noise_shape.max()
         
-        net_noise_shape*=noise_shape.detach()
+        net_noise_shape*=noise_shape
         
-    # apply non-linearities
+    # apply non-linearities and rescale
     net_noise_shape[net_noise_shape < clear_threshold] = 0.0
     net_noise_shape -= clear_threshold  
-    net_noise_shape = net_noise_shape.clip(0,1)
-    net_noise_shape /= net_noise_shape.max()
+    net_noise_shape = net_noise_shape.clip(0,1)    
+    if not net_noise_shape.max()==0:
+        net_noise_shape /= net_noise_shape.max()
 
     # channel-wise mask
     cloud=(net_noise_shape.unsqueeze(1)*(max_lvl-min_lvl) + min_lvl).expand(b,c,h,w)
