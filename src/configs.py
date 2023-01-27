@@ -34,6 +34,18 @@ LOCAL_CONFIG={'min_lvl':0.0,
               'blur_scaling':2
              }
 
+# thin cloud
+THIN_CONFIG={'min_lvl':[0.0,0.1],
+            'max_lvl':[0.4,0.7],
+            'const_scale':True,
+            'decay_factor':1.0,
+            'clear_threshold':0.0,
+            'locality_degree':[1,3],
+            'cloud_color':True,
+            'channel_offset':4,
+            'blur_scaling':2
+     }
+
 # foggy
 FOG_CONFIG={'min_lvl':[0.3,0.6],
             'max_lvl':[0.6,0.7],
