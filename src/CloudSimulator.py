@@ -70,10 +70,12 @@ def mix(input, cloud, shadow=None, blur_scaling=2.0, cloud_color=True, invert=Fa
         
     # mix the cloud
     if invert:
-        output = input * (1-cloud)
+        output = input * (1-cloud.clip(0,1))
     else:
+        # use max_lvl to multiply the resulting cloud base        
+        max_lvl=cloud.max() if cloud.max()!=0 else 1.0
         cloud_base = torch.ones_like(input) if not cloud_color else cloud_hue(input, cloud)
-        output = input * (1-cloud) + cloud_base * (cloud)
+        output = input*(1-cloud/max_lvl) + max_lvl*cloud_base*(cloud/max_lvl)
         
     return output
 
