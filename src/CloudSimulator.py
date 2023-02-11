@@ -289,7 +289,7 @@ def add_cloud(input,
     if channel_magnitude_shift != 0.0:
         channel_magnitude_shift=abs(channel_magnitude_shift)
         weights=channel_magnitude_shift*(2*torch.rand(c, device=device)-1)+1
-        cloud=(weights[:,None,None]*cloud).clip(0,1)
+        cloud=(weights[:,None,None]*cloud)#.clip(0,1)
     
     # channel offset (optional)
     if channel_offset != 0:
@@ -304,8 +304,7 @@ def add_cloud(input,
                 cloud = KT.resize(cloud[:,:,crop_val:-crop_val-1, crop_val:-crop_val-1],
                                   (h,w),
                                   interpolation='bilinear',
-                                  align_corners=True)                
-    
+                                  align_corners=True)                    
     output = mix(input, cloud, blur_scaling=blur_scaling, cloud_color=cloud_color, invert=invert)
     
     if not return_cloud:
