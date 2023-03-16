@@ -193,13 +193,17 @@ def add_cloud(input,
               cloud_color=True,
               return_cloud=False
              ):
-    """ Takes an input image of shape [height, width, channels]        
+    """ Takes an input image of shape [batch, channels, height, width]        
         and returns a generated cloudy version of the input image
     
     Args:
+        input (Tensor) : input image in shape [B,C,H,W]
+    
         max_lvl (float or tuple of floats): Indicates the maximum strength of the cloud (1.0 means that some pixels will be fully non-transparent)
         
         min_lvl (float or tuple of floats): Indicates the minimum strength of the cloud (0.0 means that some pixels will have no cloud)
+        channel_magnitude (Tensor) : cloud magnitudes in each channel, shape [B,C,1,1]
+        
         clear_threshold (float): An optional threshold for cutting off some part of the initial generated cloud mask
         
         noise_type (string: 'perlin', 'flex'): Method of noise generation (currently supported: 'perlin', 'flex')
@@ -342,13 +346,18 @@ def add_cloud_and_shadow(input,
                          cloud_color=True,
                          return_cloud=False
                         ):
-    """ Takes an input image of shape [height, width, channels]        
+    """ Takes an input image of shape [batch,channels,height, width]        
         and returns a generated cloudy version of the input image, with additional shadows added to the ground image
     
     Args:
+        
+        input (Tensor) : input image in shape [B,C,H,W]
+    
         max_lvl (float or tuple of floats): Indicates the maximum strength of the cloud (1.0 means that some pixels will be fully non-transparent)
         
         min_lvl (float or tuple of floats): Indicates the minimum strength of the cloud (0.0 means that some pixels will have no cloud)
+        channel_magnitude (Tensor) : cloud magnitudes in each channel, shape [B,C,1,1]
+        
         clear_threshold (float): An optional threshold for cutting off some part of the initial generated cloud mask
         
         shadow_max_lvl (float): Indicates the maximum strength of the cloud (1.0 means that some pixels will be completely black)
