@@ -39,7 +39,7 @@ def cloud_hue(image, cloud, scale=1.0):
 
 # --- Mixing Methods
 
-def mix(input, cloud, shadow=None, blur_scaling=2.0, cloud_color=True, invert=False):
+def mix(input, cloud, shadow=None, channel_magnitude=None, blur_scaling=2.0, cloud_color=True, invert=False):
     """ Mixing Operation for an input image and a cloud
     
         Args:
@@ -58,6 +58,9 @@ def mix(input, cloud, shadow=None, blur_scaling=2.0, cloud_color=True, invert=Fa
             Tensor: Tensor containing a mixed image
     
     """
+    if channel_magnitude is None:
+        channel_magnitude=torch.ones(*input.shape[:-2],1,1)
+    
     if shadow is not None:
         # reuse the same function, with shadow mask as 'cloud' mask (and inverting the 
         input=mix(input, shadow, blur_scaling=0.0, cloud_color=False, invert=not invert)
@@ -75,6 +78,7 @@ def mix(input, cloud, shadow=None, blur_scaling=2.0, cloud_color=True, invert=Fa
         # use max_lvl to multiply the resulting cloud base        
         max_lvl=cloud.max() if cloud.max()>1.0 else 1.0
         cloud_base = torch.ones_like(input) if not cloud_color else cloud_hue(input, cloud)
+        cloud_base = channel_magnitude*cloud_base
         output = input*(1-cloud/max_lvl) + max_lvl*cloud_base*(cloud/max_lvl)
         
     return output
@@ -176,14 +180,15 @@ class CloudGenerator(torch.nn.Module):
 def add_cloud(input,
               max_lvl=(0.95,1.0),
               min_lvl=(0.0, 0.05),
+              channel_magnitude=None,
               clear_threshold=0.0,
               noise_type = 'perlin',
               const_scale=True,
               decay_factor=1,
               locality_degree=1,
               invert=False,
-              channel_offset=2,
               channel_magnitude_shift=0.05,
+              channel_offset=2,
               blur_scaling=2.0,
               cloud_color=True,
               return_cloud=False
@@ -291,7 +296,7 @@ def add_cloud(input,
     if channel_magnitude_shift != 0.0:
         channel_magnitude_shift=abs(channel_magnitude_shift)
         weights=channel_magnitude_shift*(2*torch.rand(c, device=device)-1)+1
-        cloud=(weights[:,None,None]*cloud)#.clip(0,1)
+        cloud=(weights[:,None,None]*cloud)
     
     # channel offset (optional)
     if channel_offset != 0:
@@ -306,8 +311,15 @@ def add_cloud(input,
                 cloud = KT.resize(cloud[:,:,crop_val:-crop_val-1, crop_val:-crop_val-1],
                                   (h,w),
                                   interpolation='bilinear',
-                                  align_corners=True)                    
-    output = mix(input, cloud, blur_scaling=blur_scaling, cloud_color=cloud_color, invert=invert)
+                                  align_corners=True)     
+    
+    # transparency between 0 and 1
+    cloud=cloud.clip(0,1)
+    
+    if channel_magnitude is None:
+        channel_magnitude=torch.ones(*input.shape[:-2],1,1)
+                
+    output = mix(input, cloud, channel_magnitude=channel_magnitude, blur_scaling=blur_scaling, cloud_color=cloud_color, invert=invert)
     
     if not return_cloud:
         return output
@@ -317,6 +329,7 @@ def add_cloud(input,
 def add_cloud_and_shadow(input,
                          max_lvl=(0.95,1.0),
                          min_lvl=(0.0, 0.05),
+                         channel_magnitude=None,
                          shadow_max_lvl=[0.3,0.6],
                          clear_threshold=0.0,
                          noise_type = 'perlin',
@@ -396,6 +409,7 @@ def add_cloud_and_shadow(input,
     input, cloud_mask = add_cloud(input,
                                   max_lvl=max_lvl,
                                   min_lvl=min_lvl,
+                                  channel_magnitude=channel_magnitude,
                                   clear_threshold=clear_threshold,
                                   noise_type=noise_type,
                                   const_scale=const_scale,
