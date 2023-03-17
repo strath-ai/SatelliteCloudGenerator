@@ -59,7 +59,7 @@ def mix(input, cloud, shadow=None, channel_magnitude=None, blur_scaling=2.0, clo
     
     """
     if channel_magnitude is None:
-        channel_magnitude=torch.ones(*input.shape[:-2],1,1)
+        channel_magnitude=torch.ones(*input.shape[:-2],1,1,device=input.device)
     
     if shadow is not None:
         # reuse the same function, with shadow mask as 'cloud' mask (and inverting the 
@@ -321,7 +321,7 @@ def add_cloud(input,
     cloud=cloud.clip(0,1)
     
     if channel_magnitude is None:
-        channel_magnitude=torch.ones(*input.shape[:-2],1,1)
+        channel_magnitude=torch.ones(*input.shape[:-2],1,1,device=input.device)
                 
     output = mix(input, cloud, channel_magnitude=channel_magnitude, blur_scaling=blur_scaling, cloud_color=cloud_color, invert=invert)
     
