@@ -28,15 +28,17 @@ def mean_mag(reference,mask,mask_cloudy=None,clean=None):
         mask_clean=mask.squeeze()==0.0 
         mask_cloudy=mask.squeeze()!=0.0 
     else:  
-        mask_clean=mask.squeeze()
-        mask_cloudy=mask_cloudy.squeeze() 
+        mask_clean=mask
+        mask_cloudy=mask_cloudy
     
     full_cloud=(mask!=0.0).all()
     assert not full_cloud
 
     # coef per band
     band_coefs=[]
-    for idx,i in enumerate(reference):
+    for idx in range(reference.shape[-3]):
+        
+        i=reference.index_select(-3,torch.tensor(idx,device=reference.device))
 
         cloud_val=(i[mask_cloudy]).mean()
         clear_val=(i[mask_clean]).mean() if not full_cloud else 1
@@ -47,10 +49,12 @@ def mean_mag(reference,mask,mask_cloudy=None,clean=None):
         return band_coefs
 
     # cloud magnitude
-    cloud_mag=torch.FloatTensor(clean.shape[0])
-    for idx,i in enumerate(clean):
+    cloud_mag=torch.ones(clean.shape[:-2],device=clean.device)
+    for idx in range(clean.shape[-3]):
+        
+        i=clean.index_select(-3,torch.tensor(idx,device=clean.device))
         base=i.mean() if not full_cloud else 1
-        cloud_mag[idx]=band_coefs[idx]*base
+        cloud_mag[...,idx]=band_coefs[idx]*base    
 
     return cloud_mag
 
@@ -75,15 +79,17 @@ def max_mag(reference,mask,mask_cloudy=None,clean=None):
         mask_clean=mask.squeeze()==0.0 
         mask_cloudy=mask.squeeze()!=0.0 
     else:  
-        mask_clean=mask.squeeze()
-        mask_cloudy=mask_cloudy.squeeze()    
+        mask_clean=mask
+        mask_cloudy=mask_cloudy
     
     full_cloud=(mask!=0.0).all()
     assert not full_cloud
 
     # coef per band
     band_coefs=[]
-    for idx,i in enumerate(reference):
+    for idx in range(reference.shape[-3]):
+        
+        i=reference.index_select(-3,torch.tensor(idx,device=reference.device))
 
         cloud_val=(i[mask_cloudy]).max()
         clear_val=(i[mask_clean]).max() if not full_cloud else 1
@@ -94,10 +100,12 @@ def max_mag(reference,mask,mask_cloudy=None,clean=None):
         return band_coefs
 
     # cloud magnitude
-    cloud_mag=torch.FloatTensor(clean.shape[0])
-    for idx,i in enumerate(clean):
+    cloud_mag=torch.ones(clean.shape[:-2],device=clean.device)
+    for idx in range(clean.shape[-3]):
+        
+        i=clean.index_select(-3,torch.tensor(idx,device=clean.device))
         base=i.median() if not full_cloud else 1
-        cloud_mag[idx]=band_coefs[idx]*base
+        cloud_mag[...,idx]=band_coefs[idx]*base    
 
     return cloud_mag
 
@@ -122,15 +130,17 @@ def median_mag(reference,mask,mask_cloudy=None,clean=None):
         mask_clean=mask.squeeze()==0.0 
         mask_cloudy=mask.squeeze()!=0.0 
     else:  
-        mask_clean=mask.squeeze()
-        mask_cloudy=mask_cloudy.squeeze() 
+        mask_clean=mask
+        mask_cloudy=mask_cloudy
     
     full_cloud=(mask!=0.0).all()
     assert not full_cloud
 
     # coef per band
     band_coefs=[]
-    for idx,i in enumerate(reference):
+    for idx in range(reference.shape[-3]):
+        
+        i=reference.index_select(-3,torch.tensor(idx,device=reference.device))
 
         cloud_val=(i[mask_cloudy]).median()
         clear_val=(i[mask_clean]).median() if not full_cloud else 1
@@ -141,10 +151,12 @@ def median_mag(reference,mask,mask_cloudy=None,clean=None):
         return band_coefs
 
     # cloud magnitude
-    cloud_mag=torch.FloatTensor(clean.shape[0])
-    for idx,i in enumerate(clean):
+    cloud_mag=torch.ones(clean.shape[:-2],device=clean.device)
+    for idx in range(clean.shape[-3]):
+        
+        i=clean.index_select(-3,torch.tensor(idx,device=clean.device))
         base=i.median() if not full_cloud else 1
-        cloud_mag[idx]=band_coefs[idx]*base
+        cloud_mag[...,idx]=band_coefs[idx]*base    
 
     return cloud_mag
 
@@ -173,8 +185,8 @@ def q_mag(reference,mask,mask_cloudy=None, clean=None,q=0.95,q2=None):
         mask_clean=mask.squeeze()==0.0 
         mask_cloudy=mask.squeeze()!=0.0 
     else:  
-        mask_clean=mask.squeeze()
-        mask_cloudy=mask_cloudy.squeeze() 
+        mask_clean=mask
+        mask_cloudy=mask_cloudy
     
     full_cloud=(mask!=0.0).all()
     assert not full_cloud
@@ -184,7 +196,9 @@ def q_mag(reference,mask,mask_cloudy=None, clean=None,q=0.95,q2=None):
     
     # coef per band
     band_coefs=[]
-    for idx,i in enumerate(reference):
+    for idx in range(reference.shape[-3]):
+        
+        i=reference.index_select(-3,torch.tensor(idx,device=reference.device))
 
         cloud_val=(i[mask_cloudy]).quantile(q)
         clear_val=(i[mask_clean]).quantile(q2) if not full_cloud else 1
@@ -195,9 +209,11 @@ def q_mag(reference,mask,mask_cloudy=None, clean=None,q=0.95,q2=None):
         return band_coefs
 
     # cloud magnitude
-    cloud_mag=torch.FloatTensor(clean.shape[0])
-    for idx,i in enumerate(clean):
+    cloud_mag=torch.ones(clean.shape[:-2],device=clean.device)
+    for idx in range(clean.shape[-3]):
+        
+        i=clean.index_select(-3,torch.tensor(idx,device=clean.device))
         base=i.quantile(q2) if not full_cloud else 1
-        cloud_mag[idx]=band_coefs[idx]*base
+        cloud_mag[...,idx]=band_coefs[idx]*base        
 
     return cloud_mag

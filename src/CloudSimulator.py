@@ -57,9 +57,11 @@ def mix(input, cloud, shadow=None, channel_magnitude=None, blur_scaling=2.0, clo
     
             Tensor: Tensor containing a mixed image
     
-    """
+    """    
     if channel_magnitude is None:
         channel_magnitude=torch.ones(*input.shape[:-2],1,1,device=input.device)
+    else:
+        channel_magnitude=channel_magnitude.view(*input.shape[:-2],1,1)
     
     if shadow is not None:
         # reuse the same function, with shadow mask as 'cloud' mask (and inverting the 
