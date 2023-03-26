@@ -115,7 +115,7 @@ class CloudGenerator(torch.nn.Module):
         # wraps for segmentation mask for external use
         return segmentation_mask(*args,**kwargs)
         
-    def forward(self,img,return_cloud=False):
+    def forward(self,img,*args,return_cloud=False,**kwargs):
         # decide which config from the list (if multiple)
         used_config=self.choose_config()
         
@@ -125,7 +125,7 @@ class CloudGenerator(torch.nn.Module):
         
         # synth both cloud and shadow
         if do_shadow and do_cloud:           
-            out=add_cloud_and_shadow(img,**used_config, return_cloud=return_cloud)
+            out=add_cloud_and_shadow(img,*args,**kwargs,**used_config, return_cloud=return_cloud)
             
             if return_cloud:
                 out,cloud,shadow=out
@@ -134,7 +134,7 @@ class CloudGenerator(torch.nn.Module):
                 
         # synth only cloud
         elif do_cloud:
-            out=add_cloud(img,**used_config,return_cloud=return_cloud)   
+            out=add_cloud(img,*args,**kwargs,**used_config,return_cloud=return_cloud)   
             
             if return_cloud:
                 out,cloud=out
