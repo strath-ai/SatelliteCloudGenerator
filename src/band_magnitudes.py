@@ -31,8 +31,11 @@ def mean_mag(reference,mask,mask_cloudy=None,clean=None):
         mask_clean=mask
         mask_cloudy=mask_cloudy
     
-    full_cloud=(mask!=0.0).all()
-    assert not full_cloud
+    full_cloud=(mask_clean!=1.0).all()
+    no_cloud=(mask_cloudy==0.0).all()
+   
+    if no_cloud:
+        return None
 
     # coef per band
     band_coefs=[]
@@ -82,8 +85,11 @@ def max_mag(reference,mask,mask_cloudy=None,clean=None):
         mask_clean=mask
         mask_cloudy=mask_cloudy
     
-    full_cloud=(mask!=0.0).all()
-    assert not full_cloud
+    full_cloud=(mask_clean!=1.0).all()
+    no_cloud=(mask_cloudy==0.0).all()
+   
+    if no_cloud:
+        return None
 
     # coef per band
     band_coefs=[]
@@ -133,8 +139,11 @@ def median_mag(reference,mask,mask_cloudy=None,clean=None):
         mask_clean=mask
         mask_cloudy=mask_cloudy
     
-    full_cloud=(mask!=0.0).all()
-    assert not full_cloud
+    full_cloud=(mask_clean!=1.0).all()
+    no_cloud=(mask_cloudy==0.0).all()
+   
+    if no_cloud:
+        return None
 
     # coef per band
     band_coefs=[]
@@ -188,8 +197,11 @@ def q_mag(reference,mask,mask_cloudy=None, clean=None,q=0.95,q2=None):
         mask_clean=mask
         mask_cloudy=mask_cloudy
     
-    full_cloud=(mask!=0.0).all()
-    assert not full_cloud
+    full_cloud=(mask_clean!=1.0).all()
+    no_cloud=(mask_cloudy==0.0).all()
+   
+    if no_cloud:
+        return None
 
     if q2 is None:
         q2=q
