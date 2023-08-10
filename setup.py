@@ -8,7 +8,7 @@ setup(
     author='Mikolaj Czerkawski, Christos Tachtatzis',
     author_email="mikolaj.czerkawski@strath.ac.uk",
     license='Apache 2.0',
-    packages=['satellite_cloud_generator', 'satellite_cloud_generator.LocalGaussianBlur', 'satellite_cloud_generator.LocalGaussianBlur.src'],
+    packages=['src', 'src.LocalGaussianBlur', 'src.LocalGaussianBlur.src'],
     install_requires=[
         "torch>=1.10.0",
         "torchvision",
