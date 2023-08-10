@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name='satellite_cloud_generator',
+    name='satellite-cloud-generator',
     version='0.3',    
     description='A PyTorch-based tool for simulating clouds in satellite images.',
     url='https://github.com/strath-ai/SatelliteCloudGenerator',
