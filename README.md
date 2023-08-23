@@ -1,5 +1,5 @@
 # :cloud: Satellite Cloud Generator
-[![Open In Collab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/cidcom/SatelliteCloudGenerator/blob/main/01c_Usage_Examples_Colab.ipynb) [![DOI](https://zenodo.org/badge/532972529.svg)](https://zenodo.org/badge/latestdoi/532972529)
+[![MDPI](https://img.shields.io/badge/Open_Access-MDPI-green)]([https://zenodo.org/badge/latestdoi/532972529](https://www.mdpi.com/2072-4292/15/17/4138)) [![Open In Collab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/cidcom/SatelliteCloudGenerator/blob/main/01c_Usage_Examples_Colab.ipynb) [![Zenodo](https://zenodo.org/badge/532972529.svg)](https://zenodo.org/badge/latestdoi/532972529)
 [![[YouTube]](https://img.shields.io/badge/YouTube-%23FF0000.svg?style=flat&logo=youtube&logoColor=white)](https://youtu.be/RgAF2Y4O9zA)
 
 :star: **NEW:** This tool has been featured in the 📺 first episode of the [**satellite-image-deep-learning podcast**](https://youtu.be/RgAF2Y4O9zA)! :star: 
@@ -13,7 +13,12 @@ For example, it can be used to **generate training data** for tasks such as **cl
 
 The images must be in shape `(channel, height, width)` or `(batch, channel, height, width)` and are also returned in that format.
 
-> If you found this tool useful, please cite accordingly:
+---
+
+### Open Access Journal
+This tool is accompanied by the **open access publication** at https://www.mdpi.com/2072-4292/15/17/4138.
+
+If you found this tool useful, please cite accordingly:
 ```bibtex
 @Article{rs15174138,
   author = {Czerkawski, Mikolaj and Atkinson, Robert and Michie, Craig and Tachtatzis, Christos},
