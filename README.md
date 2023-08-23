@@ -16,16 +16,16 @@ The images must be in shape `(channel, height, width)` or `(batch, channel, heig
 > If you found this tool useful, please cite accordingly:
 ```bibtex
 @Article{rs15174138,
-author = {Czerkawski, Mikolaj and Atkinson, Robert and Michie, Craig and Tachtatzis, Christos},
-title = {SatelliteCloudGenerator: Controllable Cloud and Shadow Synthesis for Multi-Spectral Optical Satellite Images},
-journal = {Remote Sensing},
-volume = {15},
-year = {2023},
-number = {17},
-article-number = {4138},
-url = {https://www.mdpi.com/2072-4292/15/17/4138},
-issn = {2072-4292},
-doi = {10.3390/rs15174138}
+  author = {Czerkawski, Mikolaj and Atkinson, Robert and Michie, Craig and Tachtatzis, Christos},
+  title = {SatelliteCloudGenerator: Controllable Cloud and Shadow Synthesis for Multi-Spectral Optical Satellite Images},
+  journal = {Remote Sensing},
+  volume = {15},
+  year = {2023},
+  number = {17},
+  article-number = {4138},
+  url = {https://www.mdpi.com/2072-4292/15/17/4138},
+  issn = {2072-4292},
+  doi = {10.3390/rs15174138}
 }
 ```
 
