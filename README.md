@@ -15,14 +15,17 @@ The images must be in shape `(channel, height, width)` or `(batch, channel, heig
 
 > If you found this tool useful, please cite accordingly:
 ```bibtex
-@software{7053356,
-  author       = {Mikolaj Czerkawski, Christos Tachtatzis},
-  title        = {Satellite Cloud Generator},
-  month        = sep,
-  year         = 2022,
-  publisher    = {Zenodo},
-  doi          = {10.5281/zenodo.7053356},
-  url          = {https://doi.org/10.5281/zenodo.7053356}
+@Article{rs15174138,
+author = {Czerkawski, Mikolaj and Atkinson, Robert and Michie, Craig and Tachtatzis, Christos},
+title = {SatelliteCloudGenerator: Controllable Cloud and Shadow Synthesis for Multi-Spectral Optical Satellite Images},
+journal = {Remote Sensing},
+volume = {15},
+year = {2023},
+number = {17},
+article-number = {4138},
+url = {https://www.mdpi.com/2072-4292/15/17/4138},
+issn = {2072-4292},
+doi = {10.3390/rs15174138}
 }
 ```
 
