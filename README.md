@@ -34,21 +34,24 @@ If you found this tool useful, please cite accordingly:
 }
 ```
 
-### Requirements
+### Installation
 ```bash
-torch>=1.10.0
-torchvision
-kornia
-numpy
-imageio
+pip install git+https://github.com/strath-ai/SatelliteCloudGenerator
+```
+
+and then import:
+```python
+import satellite_cloud_generator as scg
+
+cloudy_img = scg.add_cloud_and_shadow(clear_img)
 ```
 
 ## :gear: Usage
 Basic usage, takes a `clear` image and returns a `cloudy` version along with a corresponding channel-specific transparency `mask`:
 ```python
-cloudy, mask = add_cloud(clear,
-                         min_lvl=0.0,
-                         max_lvl=1.0
+cloudy, mask = scg.add_cloud(clear,
+                             min_lvl=0.0,
+                             max_lvl=1.0
                          )
 ```
 ...resulting in the following:
@@ -60,7 +63,7 @@ The `min_lvl` and `max_lvl` control the range of values of the transparency `mas
 ### Generator Module
 You can also use a `CloudGenerator` object that binds a specific configuration (or a set of configurations) with the wrapped generation methods:
 ```python
-my_gen=CloudGenerator(WIDE_CONFIG,cloud_p=1.0,shadow_p=0.5)
+my_gen=scg.CloudGenerator(scg.WIDE_CONFIG,cloud_p=1.0,shadow_p=0.5)
 my_gen(my_image) # will act just like add_cloud_and_shadow() but will preserve the same configuration!
 ```
 
