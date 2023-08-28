@@ -8,7 +8,7 @@ setup(
     author='Mikolaj Czerkawski, Christos Tachtatzis',
     author_email="mikolaj.czerkawski@esa.int",
     license='Apache 2.0',
-    package_dir={"satellite_cloud_generator":"src"}
+    package_dir={"satellite_cloud_generator":"src"},
     install_requires=[
         "torch>=1.10.0",
         "torchvision",
