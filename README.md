@@ -1,5 +1,5 @@
 # :cloud: Satellite Cloud Generator
-[![MDPI](https://img.shields.io/badge/Open_Access-MDPI-green)]([https://zenodo.org/badge/latestdoi/532972529](https://www.mdpi.com/2072-4292/15/17/4138)) [![Open In Collab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/cidcom/SatelliteCloudGenerator/blob/main/01c_Usage_Examples_Colab.ipynb) [![Zenodo](https://zenodo.org/badge/532972529.svg)](https://zenodo.org/badge/latestdoi/532972529)
+[![MDPI](https://img.shields.io/badge/Open_Access-MDPI-green)](https://www.mdpi.com/2072-4292/15/17/4138) [![Open In Collab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/cidcom/SatelliteCloudGenerator/blob/main/01c_Usage_Examples_Colab.ipynb) [![Zenodo](https://zenodo.org/badge/532972529.svg)](https://zenodo.org/badge/latestdoi/532972529)
 [![[YouTube]](https://img.shields.io/badge/YouTube-%23FF0000.svg?style=flat&logo=youtube&logoColor=white)](https://youtu.be/RgAF2Y4O9zA)
 
 :star: **NEW:** This tool has been featured in the 📺 first episode of the [**satellite-image-deep-learning podcast**](https://youtu.be/RgAF2Y4O9zA)! :star: 
@@ -85,9 +85,3 @@ Blurring of the ground image based on the cloud thickness can be achieved by adj
 > :warning: The blur operation significantly increases memory footprint (caused by the internal `unfold` operation).
 
 ![Blur](imgs/back_blur.png)
-
----
-### Related Work
-* (Dong2010) [Generation of Cloud Image Based on Perlin Noise ](https://ieeexplore.ieee.org/document/5694143)
-* (Enomoto2017) [Filmy Cloud Removal on Satellite Imagery with Multispectral Conditional Generative Adversarial Nets](https://arxiv.org/abs/1710.04835)
-* (Lee2019) [Cloud Removal of Satellite Images Using Convolutional Neural Network with Reliable Cloudy Image Synthesis Model](https://ieeexplore.ieee.org/document/8803666)
