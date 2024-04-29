@@ -67,7 +67,7 @@ my_gen=scg.CloudGenerator(scg.WIDE_CONFIG,cloud_p=1.0,shadow_p=0.5)
 my_gen(my_image) # will act just like add_cloud_and_shadow() but will preserve the same configuration!
 ```
 
-## Selected Features (There's more!)
+## Selected Features (There's more! Scroll down for full list)
 Apart from synthesizing a random cloud, the tool provides several additional features (switched on by default) to make the appearance of the clouds more realistic, inspired by [(Lee2019)](https://ieeexplore.ieee.org/document/8803666).
 
 ### 1. Cloud Color
@@ -85,3 +85,42 @@ Blurring of the ground image based on the cloud thickness can be achieved by adj
 > :warning: The blur operation significantly increases memory footprint (caused by the internal `unfold` operation).
 
 ![Blur](imgs/back_blur.png)
+
+## Summary of Parameters
+```python
+def add_cloud_and_shadow(input,
+                         max_lvl=(0.95,1.0),
+                         min_lvl=(0.0, 0.05),
+                         channel_magnitude=None,
+                         shadow_max_lvl=[0.3,0.6],
+                         clear_threshold=0.0,
+                         noise_type = 'perlin',
+                         const_scale=True,
+                         decay_factor=1,
+                         locality_degree=1,
+                         channel_offset=2,
+                         channel_magnitude_shift=0.05,
+                         blur_scaling=2.0,
+                         cloud_color=True,
+                         return_cloud=False
+                        ):
+    """ Takes an input image of shape [batch,channels,height, width]        
+        and returns a generated cloudy version of the input image, with additional shadows added to the ground image"""
+```
+
+| Argument | Description | Default value |
+|:---:|:---|:---| 
+| input (Tensor) | input image in shape [B,C,H,W]| |
+|max_lvl (float or tuple of floats) | Indicates the maximum strength of the cloud (1.0 means that some pixels will be fully non-transparent)|`(0.95,1.0)`|
+|min_lvl (float or tuple of floats)| Indicates the minimum strength of the cloud (0.0 means that some pixels will have no cloud)|`(0.0, 0.05)`|
+|channel_magnitude (Tensor) | (optional) cloud magnitudes in each channel, shape [B,C,1,1]|`None`|
+|clear_threshold (float)|An optional threshold for cutting off some part of the initial generated cloud mask|`0.0`|
+|shadow_max_lvl (float)|Indicates the maximum strength of the cloud (1.0 means that some pixels will be completely black)|`[0.3,0.6]`|
+|noise_type (string: 'perlin', 'flex')|Method of noise generation (currently supported: 'perlin', 'flex')|`'perlin'`|
+|const_scale (bool)|If True, the spatial frequencies of the cloud/shadow shape are scaled based on the image size (this makes the cloud preserve its appearance regardless of image resolution)|`True`|
+|decay_factor (float)|decay factor that narrows the spectrum of the generated noise (higher values, such as 2.0 will reduce the amplitude of high spatial frequencies, yielding a 'blurry' cloud)|`1`|
+|locality degree (int)|more local clouds shapes can be achieved by multiplying several random cloud shapes with each other (value of 1 disables this effect, and higher integers correspond to the number of multiplied masks)|`1`|  
+|channel_offset (int)|optional offset that can randomly misalign spatially the individual cloud mask channels (by a value in range -channel_offset and +channel_offset)|`2`| 
+|blur_scaling (float)|Scaling factor for the variance of locally varying Gaussian blur (dependent on cloud thickness). Value of 0 will disable this feature.|`2.0`|   
+|cloud_color (bool)|If True, it will adjust the color of the cloud based on the mean color of the clear sky image|`True`|
+|return_cloud (bool)|If True, it will return a channel-wise cloud mask of shape [height, width, channels] along with the cloudy image|`True`|
